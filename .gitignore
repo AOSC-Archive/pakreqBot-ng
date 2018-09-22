@@ -1,0 +1,11 @@
+# VSCode
+.vscode
+
+# Database
+database.db
+
+# Obsolete files
+obsolete
+
+# pycache
+*/__pycache__
