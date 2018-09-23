@@ -3,9 +3,13 @@
 {% set title = "Main" %}
 
 {% block content %}
-{% if name %}
-    <p>{{ name }}</p>
+{% if requests %}
+    <ul>
+        {% for request in requests %}
+            <p>id: {{ request.id }}, name: {{ request.name }}, description: {{ request.description }}</p>
+        {% endfor %}
+    </ul>
 {% else %}
-    <p>Unnamed</p>
+    <p>No requests</p>
 {% endif %}
 {% endblock %}

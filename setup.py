@@ -22,7 +22,8 @@ def read_version():
 
 
 install_requires = ['aiohttp',
-                    'aiosqlite',
+                    'aiosqlite3',
+                    'sqlalchemy',
                     'aiohttp-jinja2',
                     'trafaret-config']
 

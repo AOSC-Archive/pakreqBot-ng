@@ -3,6 +3,7 @@
 
 # Database
 database.db
+database.db-journal
 
 # Obsolete files
 obsolete
