@@ -56,21 +56,53 @@ async def close_db(app):
     app['db'].close()
     await app['db'].wait_closed()
 
-async def get_max_user_id(conn):
-    max_id = await conn.execute("SELECT MAX(id) FROM user")
-    max_id = await max_id.fetchone()
-    if max_id:
-        return max_id[0]
-    else:
-        return None
+async def get_rows(conn, table):
+    result = await conn.execute(
+        table.select()
+    )
+    return [dict(r) for r in await result.fetchall()]
 
-async def get_max_request_id(conn):
-    max_id = await conn.execute("SELECT MAX(id) FROM request")
+async def get_row(conn, table, id):
+    result = await conn.execute(
+        table.select()
+        .where(table.c.id == id)
+    )
+    result = await result.fetchone()
+    if result is None:
+        msg = "Row with id: {} does not exists"
+        raise RecordNotFoundException(msg.format(id))
+    return dict(zip(result.keys(), result.values()))
+
+async def get_max_id(conn, table):
+    if table is REQUEST:
+        max_id = await conn.execute("SELECT MAX(id) FROM request")
+    elif table is USER:
+        max_id = await conn.execute("SELECT MAX(id) FROM user")
+    else:
+        raise ValueError
     max_id = await max_id.fetchone()
     if max_id:
-        return max_id[0]
+        return max_id[0] or 0
     else:
-        return None
+        return 0
+
+async def update_row(conn, table, id, kwargs):
+    if kwargs is not None:
+        orig_values = await get_row(conn, table, id)
+        new_values = dict()
+        for key, value in orig_values.items():
+            if key in kwargs:
+                new_values[key] = kwargs.get(key)
+            else:
+                new_values[key] = value
+        await conn.execute(
+            table.update(None)
+            .where(table.c.id == id)
+            .values(
+                new_values
+            )
+        )
+        await conn.commit()
 
 async def new_request(
     conn, status=0, rtype=0, name="Unknown",
@@ -79,9 +111,8 @@ async def new_request(
     eta=None
 ):
     # Initializing values
-    id = await get_max_request_id(conn) or 0
-    id += 1 # Larger than existing max id by 1
-    statement = REQUEST.insert().values(
+    id = await get_max_id(conn, REQUEST) + 1
+    statement = REQUEST.insert(None).values(
         id=id, status=status, type=rtype, name=name,
         description=description, requester_id=requester_id,
         packager_id=packager_id, pub_date=date,
@@ -90,58 +121,48 @@ async def new_request(
     await conn.execute(statement)
     await conn.commit()
 
-async def get_requests(conn):
-    result = await conn.execute(
-        REQUEST.select()
-    )
-    return await result.fetchall()
-
-async def get_request_detail(conn, request_id):
-    result = await conn.execute(
-        REQUEST.select()
-        .where(REQUEST.c.id == request_id)
-    )
-    request_record = await result.fetchone()
-    if not result:
-        msg = "Request with id: {} does not exists"
-        raise RecordNotFoundException(msg.format(request_id))
+async def get_request_detail(conn, id):
+    result = await get_row(conn, REQUEST, id)
     # Get requester & packager information
-    result = await conn.execute(
-        USER.select()
-        .where(USER.c.id == request_record['requester_id'])
-    )
-    requester_record = await result.fetchone()
-    result = await conn.execute(
-        USER.select()
-        .where(USER.c.id == request_record['packager_id'])
-    )
-    packager_record = await result.fetchone()
-    return request_record, requester_record, packager_record
+    result['requester'] = await get_row(conn, USER, result['requester_id'])
+    result['packager'] = await get_row(conn, USER, result['packager_id'])
+    return result
 
 async def new_user(
     conn, username, admin=0,
     password_hash=None, telegram_id=None 
 ):
     # Initializing values
-    id = await get_max_user_id(conn) or 0
+    id = await get_max_id(conn, USER) + 1
     print(id)
     id += 1# Larger than existing max id by 1
-    statement = USER.insert().values(
+    statement = USER.insert(None).values(
         id=id, username=username, admin=admin,
         password_hash=password_hash, telegram_id=telegram_id
     )
     await conn.execute(statement)
     await conn.commit()
 
-async def get_user(conn, id):
-    result = await conn.execute(
-        USER.select()
-        .where(USER.c.id == id)
-    )
-    return await result.fetchone()
-
 async def get_users(conn):
-    result = await conn.execute(
-        USER.select()
-    )
-    return result.fetchall()
+    return await get_rows(conn, USER)
+
+async def get_requests(conn):
+    return await get_rows(conn, REQUEST)
+
+async def get_max_user_id(conn):
+    return await get_max_id(conn, USER)
+
+async def get_max_request_id(conn):
+    return await get_max_id(conn, REQUEST)
+
+async def get_user(conn, id):
+    return await get_row(conn, USER, id)
+
+async def get_request(conn, id):
+    return await get_row(conn, REQUEST, id)
+
+async def update_user(conn, id, **kwargs):
+    await update_row(conn, USER, id, kwargs)
+
+async def update_request(conn, id, **kwargs):
+    await update_row(conn, REQUEST, id, kwargs)
