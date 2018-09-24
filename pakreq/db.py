@@ -3,9 +3,9 @@
 """
 Database management utils
 """
-import datetime
 import aiosqlite3.sa
 
+from datetime import datetime
 from sqlalchemy import (
     MetaData, Table, Column, ForeignKey,
     Integer, String, Date
@@ -107,7 +107,7 @@ async def update_row(conn, table, id, kwargs):
 async def new_request(
     conn, status=0, rtype=0, name="Unknown",
     description="Unknown", requester_id=0,
-    packager_id=0, date=datetime.datetime.now(),
+    packager_id=0, date=datetime.now(),
     eta=None
 ):
     # Initializing values
@@ -124,8 +124,14 @@ async def new_request(
 async def get_request_detail(conn, id):
     result = await get_row(conn, REQUEST, id)
     # Get requester & packager information
-    result['requester'] = await get_row(conn, USER, result['requester_id'])
-    result['packager'] = await get_row(conn, USER, result['packager_id'])
+    try:
+        result['requester'] = await get_row(conn, USER, result['requester_id'])
+    except:
+        result['requester'] = dict(id='0', username='Unknown')
+    try:
+        result['packager'] = await get_row(conn, USER, result['packager_id'])
+    except:
+        result['packager'] = dict(id='0', username='Unknown')
     return result
 
 async def new_user(

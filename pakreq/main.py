@@ -1,7 +1,10 @@
 # main.py
 
+import os
 import sys
-import logging 
+import signal
+import asyncio
+import logging
 
 import jinja2
 import aiohttp_jinja2
@@ -41,17 +44,24 @@ def main(argv):
 
     config = get_config(argv)
 
+    # Start web process
+    loop = asyncio.get_event_loop()
+    app = loop.run_until_complete(init_app(argv))
+    web_process = Process(target=web.run_app, args=(app,), kwargs=dict(host=config['host'], port=config['port']))
+    web_process.start()
+
     # Start telegram process
     telegram_process = Process(target=start_bot, args=(config,))
     telegram_process.start()
 
-    # Start web process
-    app = init_app(argv)
-    web_process = Process(target=web.run_app, args=(app,), kwargs=dict(host=config['host'], port=config['port']))
-    web_process.start()
-
-    web_process.join()
-    telegram_process.join()
+    try:
+        web_process.join()
+        telegram_process.join()
+    finally:
+        print("Bye-Bye!")
+        os.kill(web_process.pid, signal.SIGKILL)
+        os.kill(telegram_process.pid, signal.SIGKILL)
+        exit(0)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

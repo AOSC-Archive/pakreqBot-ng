@@ -16,6 +16,7 @@ TRAFARET = T.Dict({
         }),
     T.Key('host'): T.IP,
     T.Key('port'): T.Int(),
+    T.Key('base_url'): T.URL,
 })
 
 def json_serial(obj): # From Stack Overflow: https://stackoverflow.com/a/22238613
@@ -26,3 +27,13 @@ def json_serial(obj): # From Stack Overflow: https://stackoverflow.com/a/2223861
 
 def dump_json(obj):
     return dumps(obj, default=json_serial)
+
+def get_type(type):
+    if type == 0:
+        return "pakreq"
+    elif type == 1:
+        return "updreq"
+    elif type == 2:
+        return "optreq"
+    else:
+        return "UnknownJellyExecutorException"
