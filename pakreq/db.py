@@ -4,15 +4,29 @@
 Database management utils
 """
 import aiosqlite3.sa
+import enum
 
 from datetime import datetime
 from sqlalchemy import (
     MetaData, Table, Column, ForeignKey,
-    Integer, String, Date
+    Integer, String, Date, Boolean, Enum
 )
 from sqlalchemy.sql.expression import func
 
 __all__ = ['USER', 'REQUEST']
+
+
+class OAuthType(enum.Enum):
+    # oauth_type:
+    # 0: local credential store
+    # 1: Telegram (no impl)
+    # 2: GitHub (no impl)
+    # 3: AOSC sso (no impl)
+    LOCAL = 0
+    TELEGRAM = 1
+    GITHUB = 2
+    AOSC = 3
+
 
 META = MetaData()
 
@@ -21,9 +35,10 @@ USER = Table(
 
     Column('id', Integer, primary_key=True, unique=True),
     Column('username', String, nullable=False, unique=True),
-    Column('admin', Integer, nullable=False), # 0 -> non-admin, 1 -> admin
+    Column('admin', Boolean, nullable=False),  # 0 -> non-admin, 1 -> admin
     Column('password_hash', String, nullable=True),
-    Column('telegram_id', Integer, nullable=True),
+    Column('oauth_id', String, nullable=True),
+    Column('oauth_type', Enum(OAuthType), nullable=True),
     sqlite_autoincrement=True
 )
 
@@ -31,8 +46,10 @@ REQUEST = Table(
     'request', META,
 
     Column('id', Integer, primary_key=True, unique=True),
-    Column('status', Integer, nullable=False), # 0 -> open, 1 -> done, 2 -> rejected
-    Column('type', Integer, nullable=False), # 0 -> pakreq, 1 -> updreq, 2 -> optreq
+    # 0 -> open, 1 -> done, 2 -> rejected
+    Column('status', Integer, nullable=False),
+    # 0 -> pakreq, 1 -> updreq, 2 -> optreq
+    Column('type', Integer, nullable=False),
     Column('name', String, nullable=False),
     Column('description', String, nullable=True),
     Column('requester_id', Integer, ForeignKey('user.id'), nullable=False),
@@ -42,8 +59,10 @@ REQUEST = Table(
     sqlite_autoincrement=True
 )
 
+
 class RecordNotFoundException(Exception):
     """Requested record in database was not found"""
+
 
 async def init_db(app):
     conf = app['config']['db']
@@ -52,15 +71,18 @@ async def init_db(app):
     )
     app['db'] = engine
 
+
 async def close_db(app):
     app['db'].close()
     await app['db'].wait_closed()
+
 
 async def get_rows(conn, table):
     result = await conn.execute(
         table.select()
     )
     return [dict(r) for r in await result.fetchall()]
+
 
 async def get_row(conn, table, id):
     result = await conn.execute(
@@ -72,6 +94,7 @@ async def get_row(conn, table, id):
         msg = "Row with id: {} does not exists"
         raise RecordNotFoundException(msg.format(id))
     return dict(zip(result.keys(), result.values()))
+
 
 async def get_max_id(conn, table):
     if table is REQUEST:
@@ -85,6 +108,7 @@ async def get_max_id(conn, table):
         return max_id[0] or 0
     else:
         return 0
+
 
 async def update_row(conn, table, id, kwargs):
     if kwargs is not None:
@@ -104,6 +128,7 @@ async def update_row(conn, table, id, kwargs):
         )
         await conn.commit()
 
+
 async def new_request(
     conn, status=0, rtype=0, name="Unknown",
     description="Unknown", requester_id=0,
@@ -121,54 +146,64 @@ async def new_request(
     await conn.execute(statement)
     await conn.commit()
 
+
 async def get_request_detail(conn, id):
     result = await get_row(conn, REQUEST, id)
     # Get requester & packager information
     try:
         result['requester'] = await get_row(conn, USER, result['requester_id'])
-    except:
+    except Exception:
         result['requester'] = dict(id='0', username='Unknown')
     try:
         result['packager'] = await get_row(conn, USER, result['packager_id'])
-    except:
+    except Exception:
         result['packager'] = dict(id='0', username='Unknown')
     return result
 
+
 async def new_user(
-    conn, username, admin=0,
-    password_hash=None, telegram_id=None 
+    conn, username, admin=False,
+    password_hash=None, oauth_id=None, oauth_type=OAuthType.LOCAL
 ):
     # Initializing values
     id = await get_max_id(conn, USER) + 1
     print(id)
-    id += 1# Larger than existing max id by 1
+    id += 1  # Larger than existing max id by 1
     statement = USER.insert(None).values(
         id=id, username=username, admin=admin,
-        password_hash=password_hash, telegram_id=telegram_id
+        password_hash=password_hash, oauth_id=oauth_id, oauth_type=oauth_type
     )
     await conn.execute(statement)
     await conn.commit()
 
+
 async def get_users(conn):
     return await get_rows(conn, USER)
+
 
 async def get_requests(conn):
     return await get_rows(conn, REQUEST)
 
+
 async def get_max_user_id(conn):
     return await get_max_id(conn, USER)
+
 
 async def get_max_request_id(conn):
     return await get_max_id(conn, REQUEST)
 
+
 async def get_user(conn, id):
     return await get_row(conn, USER, id)
+
 
 async def get_request(conn, id):
     return await get_row(conn, REQUEST, id)
 
+
 async def update_user(conn, id, **kwargs):
     await update_row(conn, USER, id, kwargs)
+
 
 async def update_request(conn, id, **kwargs):
     await update_row(conn, REQUEST, id, kwargs)
