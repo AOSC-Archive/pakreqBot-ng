@@ -10,6 +10,10 @@ TRAFARET = T.Dict({
         T.Dict({
             'location': T.String(),
         }),
+    T.Key('telegram'):
+        T.Dict({
+            'token': T.String(),
+        }),
     T.Key('host'): T.IP,
     T.Key('port'): T.Int(),
 })

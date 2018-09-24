@@ -21,7 +21,10 @@ def read_version():
             raise RuntimeError(msg)
 
 
-install_requires = ['aiohttp',
+install_requires = ['ujson',
+                    'uvloop',
+                    'aiogram',
+                    'aiohttp',
                     'aiosqlite3',
                     'sqlalchemy',
                     'aiohttp-jinja2',

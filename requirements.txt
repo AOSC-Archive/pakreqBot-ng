@@ -1,0 +1,8 @@
+ujson
+uvloop
+aiogram
+aiohttp
+aiosqlite3
+sqlalchemy
+aiohttp-jinja2
+trafaret-config

@@ -1,6 +1,9 @@
 # VSCode
 .vscode
 
+# config
+config/pakreq.yaml
+
 # Database
 database.db
 database.db-journal
