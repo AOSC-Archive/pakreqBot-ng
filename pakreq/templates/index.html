@@ -1,13 +1,42 @@
 {% extends "base.html" %}
 
-{% set title = "Main" %}
+{% set title = "Package Requests" %}
 
 {% block content %}
 {% if requests %}
     <ul>
-        {% for request in requests %}
-            <p>id: {{ request.id }}, name: {{ request.name }}, description: {{ request.description }}</p>
-        {% endfor %}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Date</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for request in requests if request.status == 0 %}
+              <tr>
+                <td>{{ request.id }}</td>
+                <td>{{ request.name }}</td>
+                <td>
+                  {% if request.type == 0 %}
+                    New
+                  {% elif request.type == 1 %}
+                    Update
+                  {% elif request.type == 2 %}
+                    Optimize
+                  {% else %}
+                    Unknown
+                  {% endif %}
+                </td>
+                <td>{{ request.pub_date }}</td>
+                <td>{{ request.description }}</td>
+              </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </ul>
 {% else %}
     <p>No requests</p>
