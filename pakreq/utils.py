@@ -5,6 +5,8 @@ import trafaret as T
 from json import dumps
 from datetime import date, datetime
 
+from pakreq.db import RequestType
+
 TRAFARET = T.Dict({
     T.Key('db'):
         T.Dict({
@@ -29,11 +31,11 @@ def dump_json(obj):
     return dumps(obj, default=json_serial)
 
 def get_type(type):
-    if type == 0:
+    if type == RequestType.PAKREQ:
         return "pakreq"
-    elif type == 1:
+    elif type == RequestType.UPDREQ:
         return "updreq"
-    elif type == 2:
+    elif type == RequestType.OPTREQ:
         return "optreq"
     else:
         return "UnknownJellyExecutorException"

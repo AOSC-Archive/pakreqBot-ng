@@ -3,8 +3,9 @@
 """
 Database management utils
 """
-import aiosqlite3.sa
+
 import enum
+import aiosqlite3.sa
 
 from datetime import datetime
 from sqlalchemy import (
@@ -27,6 +28,15 @@ class OAuthType(enum.Enum):
     GITHUB = 2
     AOSC = 3
 
+class RequestType(enum.Enum):
+    PAKREQ = 0
+    UPDREQ = 1
+    OPTREQ = 2
+
+class RequestStatus(enum.Enum):
+    OPEN = 0
+    DONE = 1
+    REJECTED = 2
 
 META = MetaData()
 
@@ -46,10 +56,8 @@ REQUEST = Table(
     'request', META,
 
     Column('id', Integer, primary_key=True, unique=True),
-    # 0 -> open, 1 -> done, 2 -> rejected
-    Column('status', Integer, nullable=False),
-    # 0 -> pakreq, 1 -> updreq, 2 -> optreq
-    Column('type', Integer, nullable=False),
+    Column('status', Enum(RequestStatus), nullable=False),
+    Column('type', Enum(RequestType), nullable=False),
     Column('name', String, nullable=False),
     Column('description', String, nullable=True),
     Column('requester_id', Integer, ForeignKey('user.id'), nullable=False),
@@ -130,10 +138,10 @@ async def update_row(conn, table, id, kwargs):
 
 
 async def new_request(
-    conn, status=0, rtype=0, name="Unknown",
-    description="Unknown", requester_id=0,
-    packager_id=0, date=datetime.now(),
-    eta=None
+    conn, status=RequestStatus.OPEN, rtype=RequestType.PAKREQ,
+    name="Unknown", description="Unknown",
+    requester_id=0, packager_id=0,
+    date=datetime.now(), eta=None
 ):
     # Initializing values
     id = await get_max_id(conn, REQUEST) + 1
