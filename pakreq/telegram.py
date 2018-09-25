@@ -63,6 +63,8 @@ class pakreqBot():
                         result = result + '<b>Request ID ' + id + ' not found.</b>' + '\n'
         else:
             result = 'Too many arugments'
+        if result == '':
+            result = "No pending requests"
         await message.reply(result, parse_mode='HTML')
 
     def start(self):
