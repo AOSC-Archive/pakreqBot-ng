@@ -5,28 +5,29 @@ Database management utils
 """
 
 import enum
+import json
 import aiosqlite3.sa
 
 from datetime import datetime
 from sqlalchemy import (
     MetaData, Table, Column, ForeignKey,
-    Integer, String, Date, Boolean, Enum
+    Integer, String, Date, Boolean, Enum,
+    types
 )
-from sqlalchemy.sql.expression import func
 
 __all__ = ['USER', 'REQUEST']
 
 
-class OAuthType(enum.Enum):
-    # oauth_type:
-    # 0: local credential store
-    # 1: Telegram (no impl)
-    # 2: GitHub (no impl)
-    # 3: AOSC sso (no impl)
-    LOCAL = 0
-    TELEGRAM = 1
-    GITHUB = 2
-    AOSC = 3
+# class OAuthType(enum.Enum):
+#     # oauth_type:
+#     # 0: local credential store
+#     # 1: Telegram (no impl)
+#     # 2: GitHub (no impl)
+#     # 3: AOSC sso (no impl)
+#     LOCAL = 0
+#     TELEGRAM = 1
+#     GITHUB = 2
+#     AOSC = 3
 
 class RequestType(enum.Enum):
     PAKREQ = 0
@@ -38,6 +39,31 @@ class RequestStatus(enum.Enum):
     DONE = 1
     REJECTED = 2
 
+class OAuthInfo():
+    def __init__(self, string=None, github_id=None, telegram_id=None, aosc_id=None):
+        self.info = dict()
+        if string is None:
+            self.info['github_id'] = github_id
+            self.info['telegram_id'] = telegram_id
+            self.info['aosc_id'] = aosc_id
+        else:
+            loaded = json.loads(string)
+            self.info['github_id'] = loaded['github_id'] or None
+            self.info['telegram_id'] = loaded['telegram_id'] or None
+            self.info['aosc_id'] = loaded['aosc_id'] or None
+
+    def edit(self, **kwargs):
+        for key in self.info.keys():
+            if key in kwargs:
+                self.info[key] = kwargs.get(key)
+        return self.info
+
+    def output(self):
+        output = self.info
+        if output is not None:
+            output = json.dumps(output)
+        return output
+
 META = MetaData()
 
 USER = Table(
@@ -47,8 +73,7 @@ USER = Table(
     Column('username', String, nullable=False, unique=True),
     Column('admin', Boolean, nullable=False),  # 0 -> non-admin, 1 -> admin
     Column('password_hash', String, nullable=True),
-    Column('oauth_id', String, nullable=True),
-    Column('oauth_type', Enum(OAuthType), nullable=True),
+    Column('oauth_info', String, nullable=True),
     sqlite_autoincrement=True
 )
 
@@ -67,10 +92,8 @@ REQUEST = Table(
     sqlite_autoincrement=True
 )
 
-
 class RecordNotFoundException(Exception):
     """Requested record in database was not found"""
-
 
 async def init_db(app):
     conf = app['config']['db']
@@ -171,15 +194,14 @@ async def get_request_detail(conn, id):
 
 async def new_user(
     conn, username, admin=False,
-    password_hash=None, oauth_id=None, oauth_type=OAuthType.LOCAL
+    password_hash=None, oauth_info=OAuthInfo()
 ):
     # Initializing values
     id = await get_max_id(conn, USER) + 1
-    print(id)
-    id += 1  # Larger than existing max id by 1
     statement = USER.insert(None).values(
         id=id, username=username, admin=admin,
-        password_hash=password_hash, oauth_id=oauth_id, oauth_type=oauth_type
+        password_hash=password_hash,
+        oauth_info=oauth_info.output()
     )
     await conn.execute(statement)
     await conn.commit()

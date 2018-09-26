@@ -27,6 +27,34 @@ class pakreqBot():
         logger.info('Received /ping: {}'.format(message.text))
         await message.reply('pong')
 
+    async def register(self, message: types.Message):
+        logger.info("Registering new user: {}".format(message.chat.id))
+        splitted = message.text.split()
+        if len(splitted) == 2:
+            username = splitted[1]
+        elif len(splitted) > 2:
+            await message.reply('Too many arguments')
+            return
+        else:
+            username = message.from_user.username or message.from_user.id
+        async with self.app['db'].acquire() as conn:
+            users = await pakreq.db.get_users(conn)
+        if users is not None:
+            for user in users:
+                if pakreq.db.OAuthInfo(string=user['oauth_info']).info['telegram_id'] == message.from_user.id:
+                    print(users)
+                    await message.reply('You\'ve already registered')
+                    return
+                if user['username'] == username:
+                    await message.reply('Username already taken, please choose another one by <code>/register <username></code>')
+        try:
+            oauth_info = pakreq.db.OAuthInfo(telegram_id=message.from_user.id)
+            async with self.app['db'].acquire() as conn:
+                await pakreq.db.new_user(conn, username=username, oauth_info=oauth_info)
+            await message.reply('Registeration successful, your username is {}'.format(username))
+        except:
+            await message.reply('Unable to register, please contact admin')
+
     async def list_requests(self, message: types.Message):
         logger.info('Received /list: {}'.format(message.text))
         splitted = message.text.split()
@@ -70,6 +98,7 @@ class pakreqBot():
     def start(self):
         self.dp.register_message_handler(self.ping, commands=['ping'])
         self.dp.register_message_handler(self.list_requests, commands=['list'])
+        self.dp.register_message_handler(self.register, commands=['register'])
         executor.start_polling(self.dp)
 
 def start_bot(config):
