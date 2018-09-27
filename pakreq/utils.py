@@ -3,6 +3,7 @@
 import trafaret as T
 
 from json import dumps
+from hashlib import sha3_384
 from datetime import date, datetime
 
 from pakreq.db import RequestType
@@ -19,6 +20,7 @@ TRAFARET = T.Dict({
     T.Key('host'): T.IP,
     T.Key('port'): T.Int(),
     T.Key('base_url'): T.URL,
+    T.Key('salt'): T.String(),
 })
 
 def json_serial(obj): # From Stack Overflow: https://stackoverflow.com/a/22238613
@@ -39,3 +41,9 @@ def get_type(type):
         return "optreq"
     else:
         return "UnknownJellyExecutorException"
+
+def password_hash(id, password, salt):
+    orig = str(id) + ':' + password + ':' + salt
+    result = sha3_384()
+    result.update(orig.encode('utf-8'))
+    return result.hexdigest()
