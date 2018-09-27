@@ -1,5 +1,9 @@
 # settings.py
 
+"""
+Settings (Configurations)
+"""
+
 import argparse
 import pathlib
 
@@ -13,6 +17,7 @@ DEFAULT_CONFIG_PATH = BASE_DIR / 'config' / 'pakreq.yaml'
 
 
 def get_config(argv=None):
+    """Read and parse configuration"""
     ap = argparse.ArgumentParser()
     commandline.standard_argparse_options(
         ap,

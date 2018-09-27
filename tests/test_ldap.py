@@ -1,6 +1,9 @@
-import ldap
-from ldap.sasl import CB_AUTHNAME, CB_PASS
+# test_ldap.py
+
 import sys
+import ldap
+
+from ldap.sasl import CB_AUTHNAME, CB_PASS
 
 LDAP_SRV = 'ldaps://whoami.aosc.io'
 

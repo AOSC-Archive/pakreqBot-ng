@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-#-*- encoding: utf-8 -*-
+# -*- encoding: utf-8 -*-
+
+# init-db.py
 
 from sqlalchemy import create_engine, MetaData
 
@@ -15,13 +17,18 @@ DB_URL = DB_LINK.format(location=CONFIG['db']['location'])
 
 db_engine = create_engine(DB_URL)
 
+
 def create_tables(engine=db_engine):
+    """Create the tables"""
     meta = MetaData()
     meta.create_all(bind=engine, tables=[USER, REQUEST])
 
+
 def drop_tables(engine=db_engine):
+    """Delete the tables"""
     meta = MetaData()
     meta.drop_all(bind=engine, tables=[USER, REQUEST])
+
 
 if __name__ == '__main__':
     create_tables(engine=db_engine)

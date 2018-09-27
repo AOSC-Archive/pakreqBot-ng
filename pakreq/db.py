@@ -11,36 +11,33 @@ import aiosqlite3.sa
 from datetime import datetime
 from sqlalchemy import (
     MetaData, Table, Column, ForeignKey,
-    Integer, String, Date, Boolean, Enum,
-    types
+    Integer, String, Date, Boolean, Enum
 )
 
 __all__ = ['USER', 'REQUEST']
 
 
-# class OAuthType(enum.Enum):
-#     # oauth_type:
-#     # 0: local credential store
-#     # 1: Telegram (no impl)
-#     # 2: GitHub (no impl)
-#     # 3: AOSC sso (no impl)
-#     LOCAL = 0
-#     TELEGRAM = 1
-#     GITHUB = 2
-#     AOSC = 3
-
 class RequestType(enum.Enum):
+    """Types of requests"""
     PAKREQ = 0
     UPDREQ = 1
     OPTREQ = 2
 
+
 class RequestStatus(enum.Enum):
+    """Statuses of requests"""
     OPEN = 0
     DONE = 1
     REJECTED = 2
 
+
 class OAuthInfo():
-    def __init__(self, string=None, github_id=None, telegram_id=None, aosc_id=None):
+    """OAuth info"""
+    # TODO: Make this more elegant
+    def __init__(
+        self, string=None, github_id=None,
+        telegram_id=None, aosc_id=None
+    ):
         self.info = dict()
         if string is None:
             self.info['github_id'] = github_id
@@ -53,19 +50,24 @@ class OAuthInfo():
             self.info['aosc_id'] = loaded['aosc_id'] or None
 
     def edit(self, **kwargs):
+        """Edit OAuthInfo"""
         for key in self.info.keys():
             if key in kwargs:
                 self.info[key] = kwargs.get(key)
         return self.info
 
     def output(self):
+        """Output OAuthInfo in JSON format"""
         output = self.info
         if output is not None:
             output = json.dumps(output)
         return output
 
+
 META = MetaData()
 
+
+# Users table
 USER = Table(
     'user', META,
 
@@ -77,6 +79,8 @@ USER = Table(
     sqlite_autoincrement=True
 )
 
+
+# Request table
 REQUEST = Table(
     'request', META,
 
@@ -92,10 +96,13 @@ REQUEST = Table(
     sqlite_autoincrement=True
 )
 
+
 class RecordNotFoundException(Exception):
     """Requested record in database was not found"""
 
+
 async def init_db(app):
+    """Initialize database connection"""
     conf = app['config']['db']
     engine = await aiosqlite3.sa.create_engine(
         conf['location']
@@ -104,11 +111,13 @@ async def init_db(app):
 
 
 async def close_db(app):
+    """Close database connection"""
     app['db'].close()
     await app['db'].wait_closed()
 
 
 async def get_rows(conn, table):
+    """Fetch all the rows"""
     result = await conn.execute(
         table.select()
     )
@@ -116,6 +125,7 @@ async def get_rows(conn, table):
 
 
 async def get_row(conn, table, id):
+    """Find row by ID"""
     result = await conn.execute(
         table.select()
         .where(table.c.id == id)
@@ -128,6 +138,8 @@ async def get_row(conn, table, id):
 
 
 async def get_max_id(conn, table):
+    """Get max id of a table"""
+    # TODO: Make this more elegant
     if table is REQUEST:
         max_id = await conn.execute("SELECT MAX(id) FROM request")
     elif table is USER:
@@ -142,6 +154,7 @@ async def get_max_id(conn, table):
 
 
 async def update_row(conn, table, id, kwargs):
+    """Update row by ID"""
     if kwargs is not None:
         orig_values = await get_row(conn, table, id)
         new_values = dict()
@@ -162,10 +175,11 @@ async def update_row(conn, table, id, kwargs):
 
 async def new_request(
     conn, status=RequestStatus.OPEN, rtype=RequestType.PAKREQ,
-    name="Unknown", description="Unknown",
+    name='Unknown', description='Unknown',
     requester_id=0, packager_id=0,
     date=datetime.now(), eta=None
 ):
+    """Create new request"""
     # Initializing values
     id = await get_max_id(conn, REQUEST) + 1
     statement = REQUEST.insert(None).values(
@@ -179,6 +193,7 @@ async def new_request(
 
 
 async def get_request_detail(conn, id):
+    """Not just fetch request info, but also user info"""
     result = await get_row(conn, REQUEST, id)
     # Get requester & packager information
     try:
@@ -196,6 +211,7 @@ async def new_user(
     conn, username, admin=False,
     password_hash=None, oauth_info=OAuthInfo()
 ):
+    """Create new user"""
     # Initializing values
     id = await get_max_id(conn, USER) + 1
     statement = USER.insert(None).values(
@@ -208,32 +224,40 @@ async def new_user(
 
 
 async def get_users(conn):
+    """List all the users (wrapper of get_rows)"""
     return await get_rows(conn, USER)
 
 
 async def get_requests(conn):
+    """List all the requests (wrapper of get_rows)"""
     return await get_rows(conn, REQUEST)
 
 
 async def get_max_user_id(conn):
+    """Fetch max user id (wrapper of get_max_id)"""
     return await get_max_id(conn, USER)
 
 
 async def get_max_request_id(conn):
+    """Fetch max request id (wrapper of get_max_id)"""
     return await get_max_id(conn, REQUEST)
 
 
 async def get_user(conn, id):
+    """Get user info by ID (wrapper of get_row)"""
     return await get_row(conn, USER, id)
 
 
 async def get_request(conn, id):
+    """Get request info by ID (wrapper of get_row)"""
     return await get_row(conn, REQUEST, id)
 
 
 async def update_user(conn, id, **kwargs):
+    """Update user by ID (wrapper of update_row)"""
     await update_row(conn, USER, id, kwargs)
 
 
 async def update_request(conn, id, **kwargs):
+    """Update request by ID (wrapper of update_row)"""
     await update_row(conn, REQUEST, id, kwargs)

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-#-*- encoding: utf-8 -*-
+# -*- encoding: utf-8 -*-
+
+"""
+setuptools wrapper
+"""
 
 import os
 import re
@@ -8,6 +12,7 @@ from setuptools import find_packages, setup
 
 
 def read_version():
+    """Read version from __init__.py"""
     regexp = re.compile(r"^__version__\W*=\W*'([\d.abrc]+)'")
     init_py = os.path.join(os.path.dirname(__file__),
                            'pakreq', '__init__.py')
@@ -27,9 +32,9 @@ install_requires = ['ujson',
                     'aiohttp',
                     'aiosqlite3',
                     'sqlalchemy',
+                    'python-ldap',
                     'aiohttp-jinja2',
-                    'trafaret-config',
-                    'python-ldap']
+                    'trafaret-config']
 
 
 setup(name='pakreq',

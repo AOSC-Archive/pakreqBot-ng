@@ -3,7 +3,7 @@
 FLAGS=
 
 flake:
-	flake8 aiohttpdemo_polls
+	flake8 pakreq
 
 test:
 	pytest tests

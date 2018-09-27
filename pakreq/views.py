@@ -1,23 +1,30 @@
 # views.py
 
+"""
+Views
+"""
+
 import aiohttp_jinja2
 
 from aiohttp import web
-from datetime import datetime
 
 import pakreq.db
 
 from pakreq.utils import dump_json
 
 
+# HTML
 @aiohttp_jinja2.template('index.html')
 async def index(request):
+    """Index"""
     async with request.app['db'].acquire() as conn:
         requests = await pakreq.db.get_requests(conn)
     return {'requests': requests}
 
 
+# JSON
 async def requests_all(request):
+    """List requests"""
     async with request.app['db'].acquire() as conn:
         result = await pakreq.db.get_requests(conn)
     return web.json_response(result, dumps=dump_json)

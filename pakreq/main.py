@@ -18,7 +18,9 @@ from pakreq.settings import get_config
 from pakreq.telegram import start_bot
 from pakreq.middlewares import setup_middlewares
 
+
 async def init_app(argv=None):
+    """Initialize aiohtp"""
     app = web.Application()
 
     app['config'] = get_config(argv)
@@ -38,7 +40,9 @@ async def init_app(argv=None):
 
     return app
 
+
 def main(argv):
+    """Main!"""
     # Setup logger
     logging.basicConfig(level=logging.INFO)
 
@@ -47,21 +51,27 @@ def main(argv):
     # Start web process
     loop = asyncio.get_event_loop()
     app = loop.run_until_complete(init_app(argv))
-    web_process = Process(target=web.run_app, args=(app,), kwargs=dict(host=config['host'], port=config['port']))
+    web_process = Process(
+        target=web.run_app, args=(app,),
+        kwargs=dict(host=config['host'], port=config['port'])
+    )
     web_process.start()
 
     # Start telegram process
-    telegram_process = Process(target=start_bot, args=(config,))
+    telegram_process = Process(
+        target=start_bot, args=(config,)
+    )
     telegram_process.start()
 
     try:
         web_process.join()
         telegram_process.join()
     finally:
-        print("Bye-Bye!")
+        print('Bye-Bye!')
         os.kill(web_process.pid, signal.SIGKILL)
         os.kill(telegram_process.pid, signal.SIGKILL)
         exit(0)
+
 
 if __name__ == '__main__':
     main(sys.argv[1:])

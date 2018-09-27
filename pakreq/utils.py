@@ -1,5 +1,9 @@
 # utils.py
 
+"""
+Utilities
+"""
+
 import trafaret as T
 
 from json import dumps
@@ -8,6 +12,7 @@ from datetime import date, datetime
 
 from pakreq.db import RequestType
 
+# Configuration checker
 TRAFARET = T.Dict({
     T.Key('db'):
         T.Dict({
@@ -23,26 +28,34 @@ TRAFARET = T.Dict({
     T.Key('salt'): T.String(),
 })
 
-def json_serial(obj): # From Stack Overflow: https://stackoverflow.com/a/22238613
+
+def json_serial(obj):
+    # From Stack Overflow: https://stackoverflow.com/a/22238613
     """JSON serializer for objects not serializable by default json code"""
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
-    raise TypeError ("Type %s not serializable" % type(obj))
+    raise TypeError('Type %s not serializable' % type(obj))
+
 
 def dump_json(obj):
+    """Wrapper for dumping JSON"""
     return dumps(obj, default=json_serial)
 
+
 def get_type(type):
+    """Get request type"""
     if type == RequestType.PAKREQ:
-        return "pakreq"
+        return 'pakreq'
     elif type == RequestType.UPDREQ:
-        return "updreq"
+        return 'updreq'
     elif type == RequestType.OPTREQ:
-        return "optreq"
+        return 'optreq'
     else:
-        return "UnknownJellyExecutorException"
+        return 'UnknownJellyExecutorException'
+
 
 def password_hash(id, password, salt):
+    """Calculate password hash (SHA3_384)"""
     orig = '%s:%s:%s' % (id, password, salt)
     result = sha3_384()
     result.update(orig.encode('utf-8'))

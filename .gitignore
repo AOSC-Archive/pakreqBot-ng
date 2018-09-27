@@ -17,3 +17,6 @@ obsolete
 # build directories
 /venv
 /build
+
+# egg-info
+pakreq.egg-info
