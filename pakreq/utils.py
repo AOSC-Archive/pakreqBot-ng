@@ -43,7 +43,7 @@ def get_type(type):
         return "UnknownJellyExecutorException"
 
 def password_hash(id, password, salt):
-    orig = str(id) + ':' + password + ':' + salt
+    orig = '%s:%s:%s' % (id, password, salt)
     result = sha3_384()
     result.update(orig.encode('utf-8'))
     return result.hexdigest()
