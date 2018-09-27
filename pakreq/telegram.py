@@ -9,7 +9,7 @@ from aiogram.utils import executor
 
 import pakreq.db
 
-from pakreq.utils import get_type
+from pakreq.utils import get_type, password_hash
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,6 @@ class pakreqBot():
         if users is not None:
             for user in users:
                 if pakreq.db.OAuthInfo(string=user['oauth_info']).info['telegram_id'] == message.from_user.id:
-                    print(users)
                     await message.reply('You\'ve already registered')
                     return
                 if user['username'] == username:
@@ -54,6 +53,22 @@ class pakreqBot():
             await message.reply('Registeration successful, your username is {}'.format(username))
         except:
             await message.reply('Unable to register, please contact admin')
+
+    async def set_password(self, message: types.Message):
+        splitted = message.text.split()
+        if len(splitted) == 2:
+            async with self.app['db'].acquire() as conn:
+                users = await pakreq.db.get_users(conn)
+            for user in users:
+                if pakreq.db.OAuthInfo(string=user['oauth_info']).info['telegram_id'] == message.from_user.id:
+                    async with self.app['db'].acquire() as conn:
+                        await pakreq.db.update_user(conn, user['id'],
+                            password_hash=password_hash(user['id'], splitted[1], self.app['config']['salt']))
+                    await message.reply('Success.')
+                    return
+            await message.reply('You have to register or login first')
+        else:
+            await message.reply('Invalid request')
 
     async def list_requests(self, message: types.Message):
         logger.info('Received /list: {}'.format(message.text))
@@ -99,6 +114,7 @@ class pakreqBot():
         self.dp.register_message_handler(self.ping, commands=['ping'])
         self.dp.register_message_handler(self.list_requests, commands=['list'])
         self.dp.register_message_handler(self.register, commands=['register'])
+        self.dp.register_message_handler(self.set_password, commands=['set_pw'])
         executor.start_polling(self.dp)
 
 def start_bot(config):
