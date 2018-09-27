@@ -28,7 +28,8 @@ install_requires = ['ujson',
                     'aiosqlite3',
                     'sqlalchemy',
                     'aiohttp-jinja2',
-                    'trafaret-config']
+                    'trafaret-config',
+                    'python-ldap']
 
 
 setup(name='pakreq',

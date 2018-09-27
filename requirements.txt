@@ -6,3 +6,4 @@ aiosqlite3
 sqlalchemy
 aiohttp-jinja2
 trafaret-config
+python-ldap

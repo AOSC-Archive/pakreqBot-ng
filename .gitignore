@@ -13,3 +13,7 @@ obsolete
 
 # pycache
 */__pycache__
+
+# build directories
+/venv
+/build
