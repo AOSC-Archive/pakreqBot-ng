@@ -12,7 +12,7 @@ from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 
 import pakreq.db
-import pakreq.telegram_const
+import pakreq.telegram_consts
 
 from pakreq.utils import get_type, password_hash
 
@@ -38,6 +38,11 @@ class pakreqBot(object):
             'Received ping from Telegram user: %s' % message.from_user.id
         )
         await message.reply('pong')
+
+    async def show_help(self, message: types.Message):
+        """Help message"""
+        await message.reply(
+            pakreq.telegram_consts.HELP_CRUFT, parse_mode='HTML')
 
     async def register(self, message: types.Message):
         """Implementation of /register, register new user"""
@@ -165,6 +170,9 @@ class pakreqBot(object):
         )
         self.dp.register_message_handler(
             self.set_password, commands=['set_pw']
+        )
+        self.dp.register_message_handler(
+            self.show_help, commands=['help']
         )
         executor.start_polling(self.dp)
 
