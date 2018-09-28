@@ -178,7 +178,7 @@ class pakreqBot(object):
             for request in requests:
                 if count <= 10:
                     result = result +\
-                        'ID: %s <b>%s</b>(%s): %s\n' %\
+                        'ID: %s <b>%s</b> (%s): %s\n' %\
                         (
                             request['id'], request['name'],
                             get_type(request['type']), request['description']
@@ -194,7 +194,7 @@ class pakreqBot(object):
                 async with self.app['db'].acquire() as conn:
                     try:
                         request = await pakreq.db.get_request_detail(conn, id)
-                        result = pakreq.telegram_const.REQUEST_DETAIL.format(
+                        result += pakreq.telegram_consts.REQUEST_DETAIL.format(
                             name=request['name'],
                             type=get_type(request['type']),
                             desc=request['description'],
