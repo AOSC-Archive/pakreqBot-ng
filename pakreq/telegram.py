@@ -21,9 +21,7 @@ logger = logging.getLogger(__name__)
 
 def escape(text):
     """Escape string to avoid explosion"""
-    text.replace('&', '&amp;')
-    text.replace('<', '&lt;')
-    text.replace('>', '&gt;')
+    return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 
 class pakreqBot(object):
@@ -73,7 +71,8 @@ class pakreqBot(object):
             ))
             return
         async with self.app['db'].acquire() as conn:
-            await pakreq.db.new_request(conn, rtype=rtype, name=splitted[1],
+            await pakreq.db.new_request(conn, rtype=rtype,
+                                        name=escape(splitted[1]),
                                         description=description)
             await message.reply('Successfully added %s to the list' %
                                 splitted[1])
