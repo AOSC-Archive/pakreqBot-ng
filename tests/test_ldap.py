@@ -30,7 +30,7 @@ if __name__ == '__main__':
     dn = None
     try:
         # request correct password for the test account from developers
-        aosc_sso.sasl_interactive_bind_s('aosc', freeipa_login('aosc', ''))
+        aosc_sso.sasl_interactive_bind_s('', freeipa_login('aosc', ''))
         dn = aosc_sso.whoami_s()
     except ldap.LDAPError:
         print('Auth error')

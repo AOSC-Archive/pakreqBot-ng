@@ -12,6 +12,7 @@ from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 
 import pakreq.db
+import pakreq.telegram_consts
 
 from pakreq.utils import get_type, password_hash
 
@@ -20,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 class pakreqBot(object):
     """pakreqBot main object"""
+
     def __init__(self, config):
         self.app = dict()
         self.app['config'] = config
@@ -36,6 +38,11 @@ class pakreqBot(object):
             'Received ping from Telegram user: %s' % message.from_user.id
         )
         await message.reply('pong')
+
+    async def show_help(self, message: types.Message):
+        """Help message"""
+        await message.reply(
+            pakreq.telegram_consts.HELP_CRUFT, parse_mode='HTML')
 
     async def register(self, message: types.Message):
         """Implementation of /register, register new user"""
@@ -58,7 +65,7 @@ class pakreqBot(object):
                     return
                 if user['username'] == username:
                     await message.reply('Username already taken, please choose \
-                        another one by <code>/register <username></code>')
+                        another one using <code>/register <username></code>')
         try:
             oauth_info = pakreq.db.OAuthInfo(telegram_id=message.from_user.id)
             async with self.app['db'].acquire() as conn:
@@ -180,44 +187,26 @@ class pakreqBot(object):
                 else:
                     break
             if count > 10:
-                result = result +\
-                    '\nPlease visit %s for the complete listing' %\
+                result += '\nPlease visit %s for the complete listing' %\
                     self.app['config']['base_url']
         elif (len(splitted) > 1) and (len(splitted) <= 5):
             for id in splitted[1:]:
                 async with self.app['db'].acquire() as conn:
                     try:
                         request = await pakreq.db.get_request_detail(conn, id)
-                        result = result + '<b>%s</b>:\n' % request['name']
-                        result = result +\
-                            '  <b>Type</b>: %s\n' %\
-                            get_type(request['type'])
-                        result = result +\
-                            '  <b>Description</b>: %s\n' %\
-                            request['description']
-                        result = result +\
-                            '  <b>Requester</b>: %s(%s)\n' %\
-                            (
-                                request['requester']['username'],
-                                request['requester']['id']
-                            )
-                        result = result +\
-                            '  <b>Packager</b>: %s(%s)\n' %\
-                            (
-                                request['packager']['username'],
-                                request['packager']['id']
-                            )
-                        result = result +\
-                            '  <b>Pub date</b>: %s\n' %\
-                            request['pub_date'].isoformat()
-                        result = result +\
-                            '  <b>ETA</b>: %s\n' %\
-                            (request['eta'] or 'Unset')
-                        result = result + '\n'
+                        result = pakreq.telegram_const.REQUEST_DETAIL.format(
+                            name=request['name'],
+                            type=get_type(request['type']),
+                            desc=request['description'],
+                            req_name=request['requester']['username'],
+                            req_id=request['requester']['id'],
+                            pak_name=request['packager']['username'],
+                            pak_id=request['packager']['id'],
+                            date=request['pub_date'].isoformat(),
+                            eta=(request['eta'] or 'Unset'))
+
                     except Exception:
-                        result = result +\
-                            '<b>Request ID %s not found.</b>\n' %\
-                            id
+                        result += '<b>Request ID %s not found.</b>\n' % id
         else:
             result = 'Too many arugments'
         if result == '':
@@ -230,16 +219,19 @@ class pakreqBot(object):
             self.ping, commands=['ping']
         )
         self.dp.register_message_handler(
-            self.list_requests, commands=['list']
+            self.show_help, commands=['help']
         )
         self.dp.register_message_handler(
             self.register, commands=['register']
         )
         self.dp.register_message_handler(
+            self.link_account, commands=['link']
+        )
+        self.dp.register_message_handler(
             self.set_password, commands=['set_pw']
         )
         self.dp.register_message_handler(
-            self.link_account, commands=['link']
+            self.list_requests, commands=['list']
         )
         executor.start_polling(self.dp)
 
