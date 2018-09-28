@@ -44,6 +44,33 @@ class pakreqBot(object):
         await message.reply(
             pakreq.telegram_consts.HELP_CRUFT, parse_mode='HTML')
 
+    async def new_request(self, message: types.Message):
+        def handle_request(type):
+            return {
+                '/pakreq': pakreq.db.RequestType.PAKREQ,
+                '/optreq': pakreq.db.RequestType.OPTREQ,
+                '/updreq': pakreq.db.RequestType.UPDREQ
+            }.get(type, -1)  # There should be only 3 types of requests
+        splitted = message.text.split(maxsplit=2)
+        description = 'Unavailable'
+        if len(splitted) < 2:
+            await message.reply('Too few arguments')
+            return
+        elif len(splitted) == 3:
+            description = splitted[2]
+        rtype = handle_request(splitted[0])
+        if rtype == -1:
+            logging.error('Unexpected request type: %s' % splitted[0])
+            await message.reply(pakreq.telegram_consts.error_msg(
+                'Programming error'
+            ))
+            return
+        async with self.app['db'].acquire() as conn:
+            await pakreq.db.new_request(conn, rtype=rtype, name=splitted[1],
+                                        description=description)
+            await message.reply('Successfully added %s to the list' %
+                                splitted[1])
+
     async def register(self, message: types.Message):
         """Implementation of /register, register new user"""
         logger.info('Registering new user: %s' % message.chat.id)
@@ -216,24 +243,17 @@ class pakreqBot(object):
 
     def start(self):
         """Register message handlers, and start the bot"""
-        self.dp.register_message_handler(
-            self.ping, commands=['ping']
-        )
-        self.dp.register_message_handler(
-            self.show_help, commands=['help']
-        )
-        self.dp.register_message_handler(
-            self.register, commands=['register']
-        )
-        self.dp.register_message_handler(
-            self.link_account, commands=['link']
-        )
-        self.dp.register_message_handler(
-            self.set_password, commands=['set_pw']
-        )
-        self.dp.register_message_handler(
-            self.list_requests, commands=['list']
-        )
+        commands_mapping = [
+            (['ping'], self.ping),
+            (['list'], self.list_requests),
+            (['register'], self.register),
+            (['passwd'], self.set_password),
+            (['help'], self.show_help),
+            (['pakreq', 'updreq', 'optreq'], self.new_request)
+        ]
+        for command in commands_mapping:
+            logging.info('Registering command: %s' % command[0])
+            self.dp.register_message_handler(command[1], commands=command[0])
         executor.start_polling(self.dp)
 
 
