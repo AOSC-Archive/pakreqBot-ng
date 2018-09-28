@@ -19,6 +19,13 @@ from pakreq.utils import get_type, password_hash
 logger = logging.getLogger(__name__)
 
 
+def escape(text):
+    """Escape string to avoid explosion"""
+    text.replace('&', '&amp;')
+    text.replace('<', '&lt;')
+    text.replace('>', '&gt;')
+
+
 class pakreqBot(object):
     """pakreqBot main object"""
 
