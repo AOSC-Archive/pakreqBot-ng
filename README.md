@@ -1,7 +1,8 @@
 pakreqBot-ng
 ============
 
-Gugugu
+Gugugu  
+<img src="https://upload.wikimedia.org/wikipedia/commons/4/43/Peace_dove.svg" alt="gugu" width="200" height="200"/>
 
 TODO
 ----
@@ -9,12 +10,23 @@ TODO
   - [ ] DB utility
     - [x] add, update requests/users
   - [ ] Auth
-    - [ ] Telegram web auth
+    - [x] ~~Telegram web auth~~ See below
     - [ ] Basic auth system
+      - [ ] OAuth with other providers
   - [ ] Beautify
 - [ ] Telegram bot
-  - [ ] Auth
-  - [ ] Interact with web server
+  - [ ] ~~Auth~~ Registeration and linking
+    - [x] /register - Registeration
+    - [x] /link - Link Telegram account to pakreq account
+    - [x] /set_pw - Update password
+    - [ ] /unlink - Unlink Telegram account
+    - [ ] /set_username - Set username
+  - [x] ~~Interact with web server~~ Access database directly
+  - [ ] Basic functionality
+    - [x] /list
+    - [ ] /pakreq, /updreq, /optreq
+    - [ ] /claim, /unclaim
+    - [ ] /done, /reject
+    - [ ] /set_eta
+    - [ ] /help (Update needed)
 ...
-
-![Gugugu](https://upload.wikimedia.org/wikipedia/commons/4/43/Peace_dove.svg)
