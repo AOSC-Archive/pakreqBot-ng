@@ -71,6 +71,60 @@ class pakreqBot(object):
         except Exception:
             await message.reply('Unable to register, please contact admin')
 
+    async def link_account(self, message: types.Message):
+        """Implementation of /link, link telegram account to pakreq account"""
+        logger.info(
+            'Received request to link telegram account: %s' %
+            message.from_user.id
+        )
+        splitted = message.text.split()
+        if len(splitted) == 3:
+            success = False
+            async with self.app['db'].acquire() as conn:
+                users = await pakreq.db.get_users(conn)
+            for user in users:
+                if user['username'] == splitted[1]:
+                    p_hash = password_hash(
+                        user['id'],
+                        splitted[2],
+                        self.app['config']['salt']
+                    )
+                    if user['password_hash'] == p_hash:
+                        async with self.app['db'].acquire() as conn:
+                            await pakreq.db.update_user(
+                                conn,
+                                user['id'],
+                                oauth_info=pakreq.db.OAuthInfo(
+                                    string=user['oauth_info']
+                                    ).edit(
+                                        telegram_id=message.from_user.id
+                                    ).output()
+                            )
+                        success = True
+                        break
+            if success:
+                # Unlink this Telegram account from other pakreq accounts
+                # TODO: Make this more elegant
+                for user in users:
+                    if user['username'] != splitted[1]:
+                        if pakreq.db.OAuthInfo(string=user['oauth_info'])\
+                                .info['telegram_id'] == message.from_user.id:
+                                async with self.app['db'].acquire() as conn:
+                                    await pakreq.db.update_user(
+                                        conn,
+                                        user['id'],
+                                        oauth_info=pakreq.db.OAuthInfo(
+                                            string=user['oauth_info']
+                                        ).edit(
+                                            telegram_id=None
+                                        ).output()
+                                    )
+                await message.reply('Success.')
+            else:
+                await message.reply('Incorrect username or password')
+        else:
+            await message.reply('Invalid request')
+
     async def set_password(self, message: types.Message):
         """Implementation of /set_pw, set password for user"""
         logger.info(
@@ -94,7 +148,9 @@ class pakreqBot(object):
                         )
                     await message.reply('Success.')
                     return
-            await message.reply('You have to register or login first')
+            await message.reply(
+                'You have to register or link your account first'
+            )
         else:
             await message.reply('Invalid request')
 
@@ -181,6 +237,9 @@ class pakreqBot(object):
         )
         self.dp.register_message_handler(
             self.set_password, commands=['set_pw']
+        )
+        self.dp.register_message_handler(
+            self.link_account, commands=['link']
         )
         executor.start_polling(self.dp)
 

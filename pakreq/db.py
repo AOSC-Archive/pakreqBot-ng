@@ -54,7 +54,7 @@ class OAuthInfo():
         for key in self.info.keys():
             if key in kwargs:
                 self.info[key] = kwargs.get(key)
-        return self.info
+        return self
 
     def output(self):
         """Output OAuthInfo in JSON format"""
