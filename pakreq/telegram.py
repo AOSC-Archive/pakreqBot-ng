@@ -176,7 +176,7 @@ class pakreqBot(object):
                 requests = await pakreq.db.get_requests(conn)
             count = 0
             for request in requests:
-                if count <= 10:
+                if count < 10:
                     result = result +\
                         'ID: %s <b>%s</b> (%s): %s\n' %\
                         (
@@ -186,7 +186,7 @@ class pakreqBot(object):
                     count += 1
                 else:
                     break
-            if count > 10:
+            if count >= 10:
                 result += '\nPlease visit %s for the complete listing' %\
                     self.app['config']['base_url']
         elif (len(splitted) > 1) and (len(splitted) <= 5):
