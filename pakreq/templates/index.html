@@ -16,7 +16,7 @@
           </tr>
         </thead>
         <tbody>
-          {% for request in requests if request.status == 0 %}
+          {% for request in requests %}
               <tr>
                 <td>{{ request.id }}</td>
                 <td>{{ request.name }}</td>
