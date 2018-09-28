@@ -196,6 +196,7 @@ class pakreqBot(object):
                         request = await pakreq.db.get_request_detail(conn, id)
                         result += pakreq.telegram_consts.REQUEST_DETAIL.format(
                             name=request['name'],
+                            id=request['id'],
                             type=get_type(request['type']),
                             desc=request['description'],
                             req_name=request['requester']['username'],
