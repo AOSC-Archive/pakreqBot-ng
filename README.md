@@ -24,7 +24,7 @@ TODO
   - [x] ~~Interact with web server~~ Access database directly
   - [ ] Basic functionality
     - [x] /list
-    - [ ] /pakreq, /updreq, /optreq
+    - [x] /pakreq, /updreq, /optreq
     - [ ] /claim, /unclaim
     - [ ] /done, /reject
     - [ ] /set_eta

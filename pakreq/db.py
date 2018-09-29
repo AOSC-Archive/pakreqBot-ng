@@ -174,14 +174,14 @@ async def update_row(conn, table, id, kwargs):
 
 
 async def new_request(
-    conn, status=RequestStatus.OPEN, rtype=RequestType.PAKREQ,
+    conn, id=None, status=RequestStatus.OPEN, rtype=RequestType.PAKREQ,
     name='Unknown', description='Unknown',
     requester_id=0, packager_id=0,
     date=datetime.now(), eta=None
 ):
     """Create new request"""
     # Initializing values
-    id = await get_max_id(conn, REQUEST) + 1
+    id = id or await get_max_id(conn, REQUEST) + 1
     statement = REQUEST.insert(None).values(
         id=id, status=status, type=rtype, name=name,
         description=description, requester_id=requester_id,

@@ -50,13 +50,15 @@ class pakreqBot(object):
             pakreq.telegram_consts.HELP_CRUFT, parse_mode='HTML')
 
     async def new_request(self, message: types.Message):
-        def handle_request(type):
+        """Implementation of /pakreq, /updreq, /optreq, add new request"""
+        def handle_request(command):
             return {
                 '/pakreq': pakreq.db.RequestType.PAKREQ,
                 '/optreq': pakreq.db.RequestType.OPTREQ,
                 '/updreq': pakreq.db.RequestType.UPDREQ
-            }.get(type, -1)  # There should be only 3 types of requests
+            }.get(command, -1)  # There should be only 3 types of requests
         splitted = message.text.split(maxsplit=2)
+        logger.info('Adding new request: %s' % splitted[1])
         description = 'Unavailable'
         if len(splitted) < 2:
             await message.reply('Too few arguments')
@@ -71,11 +73,23 @@ class pakreqBot(object):
             ))
             return
         async with self.app['db'].acquire() as conn:
-            await pakreq.db.new_request(conn, rtype=rtype,
-                                        name=escape(splitted[1]),
+            requests = await pakreq.db.get_requests(conn)
+            for request in requests:
+                if (request['name'] == splitted[1]) and\
+                        (request['type'] == rtype):
+                    await message.reply(
+                        'Request %s is already in the list' %
+                        splitted[1]
+                    )
+                    return
+            id = await pakreq.db.get_max_request_id(conn) + 1
+            await pakreq.db.new_request(conn, id=id, rtype=rtype,
+                                        name=splitted[1],
                                         description=description)
-            await message.reply('Successfully added %s to the list' %
-                                splitted[1])
+        await message.reply(
+            'Successfully added %s to the list, ID of this request is %s' %
+            (splitted[1], id)
+        )
 
     async def register(self, message: types.Message):
         """Implementation of /register, register new user"""
@@ -213,8 +227,9 @@ class pakreqBot(object):
                     result = result +\
                         'ID: %s <b>%s</b> (%s): %s\n' %\
                         (
-                            request['id'], request['name'],
-                            get_type(request['type']), request['description']
+                            request['id'], escape(request['name']),
+                            get_type(request['type']),
+                            escape(request['description'])
                         )
                     count += 1
                 else:
@@ -228,13 +243,13 @@ class pakreqBot(object):
                     try:
                         request = await pakreq.db.get_request_detail(conn, id)
                         result += pakreq.telegram_consts.REQUEST_DETAIL.format(
-                            name=request['name'],
+                            name=escape(request['name']),
                             id=request['id'],
                             type=get_type(request['type']),
-                            desc=request['description'],
-                            req_name=request['requester']['username'],
+                            desc=escape(request['description']),
+                            req_name=escape(request['requester']['username']),
                             req_id=request['requester']['id'],
-                            pak_name=request['packager']['username'],
+                            pak_name=escape(request['packager']['username']),
                             pak_id=request['packager']['id'],
                             date=request['pub_date'].isoformat(),
                             eta=(request['eta'] or 'Unset'))
