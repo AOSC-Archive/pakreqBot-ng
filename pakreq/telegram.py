@@ -352,6 +352,44 @@ class pakreqBot(object):
                     'Request ID %s not found' % splitted[1]
                 )
                 return
+    
+    async def set_status(self, message: types.Message):
+        def handle_request(command):
+            return {
+                '/done': pakreq.db.RequestStatus.DONE,
+                '/reject': pakreq.db.RequestStatus.REJECTED
+            }.get(command, -1)  # There should be only 2 types of requests
+        splitted = message.text.split()
+        logger.info(
+            'Received request to mark request(s) as %sed: %s' %
+            (splitted[0][1:], message.text)
+        )
+        result = ''
+        rtype = handle_request(splitted[0])
+        async with self.app['db'].acquire() as conn:
+            users = await pakreq.db.get_users(conn)
+            user_id = find_user(users, message.from_user.id)
+            if user_id is None:
+                await message.reply(
+                    'You have to register or link your pakreq account first'
+                )
+                return
+            for id in splitted[1:]:
+                try:
+                    request = await pakreq.db.get_request(conn, int(id))
+                    if (splitted[0] == '/done') and\
+                            (request['packager_id'] != user_id):
+                        result +=\
+                            'You have to claim the request %s\
+                             before mark it as done' %\
+                            id
+                        continue
+                    await pakreq.db.update_request(conn, int(id), status=rtype)
+                    result += 'Successfully processed request id %s' %\
+                        (splitted[0][1:], id)
+                except pakreq.db.RecordNotFoundException:
+                    result += 'Request ID %s not found\n' % id
+        await message.reply(result)
 
     def start(self):
         """Register message handlers, and start the bot"""
@@ -362,6 +400,7 @@ class pakreqBot(object):
             (['passwd'], self.set_password),
             (['help'], self.show_help),
             (['note'], self.set_note),
+            (['done', 'reject'], self.set_status),
             (['claim', 'unclaim'], self.claim_request),
             (['pakreq', 'updreq', 'optreq'], self.new_request)
         ]
