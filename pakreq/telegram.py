@@ -14,7 +14,7 @@ from aiogram.utils import executor
 import pakreq.db
 import pakreq.telegram_consts
 
-from pakreq.utils import get_type, password_hash
+from pakreq.utils import get_type, get_status, password_hash
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +50,10 @@ class pakreqBot(object):
         logger.info(
             'Received ping from Telegram user: %s' % message.from_user.id
         )
-        await message.reply('pong')
+        await message.reply('<b>pong</b>', parse_mode='HTML')
 
     async def show_help(self, message: types.Message):
-        """Help message"""
+        """Implementation of /help, show help message"""
         await message.reply(
             pakreq.telegram_consts.HELP_CRUFT, parse_mode='HTML')
 
@@ -69,7 +69,10 @@ class pakreqBot(object):
         logger.info('Adding new request: %s' % splitted[1])
         description = 'Unavailable'
         if len(splitted) < 2:
-            await message.reply('Too few arguments')
+            await message.reply(
+                pakreq.telegram_consts.TOO_FEW_ARGUMENTS,
+                parse_mode='HTML'
+            )
             return
         elif len(splitted) == 3:
             description = splitted[2]
@@ -77,7 +80,7 @@ class pakreqBot(object):
         if rtype == -1:
             logging.error('Unexpected request type: %s' % splitted[0])
             await message.reply(pakreq.telegram_consts.error_msg(
-                'Programming error'
+                'Unexpected request type'
             ))
             return
         async with self.app['db'].acquire() as conn:
@@ -85,7 +88,8 @@ class pakreqBot(object):
             user_id = find_user(users, message.from_user.id)
             if user_id is None:
                 await message.reply(
-                    'You have to register or link your pakreq account first'
+                    pakreq.telegram_consts.REGISTER_FIRST,
+                    parse_mode='HTML'
                 )
                 return
             requests = await pakreq.db.get_requests(conn)
@@ -93,8 +97,12 @@ class pakreqBot(object):
                 if (request['name'] == splitted[1]) and\
                         (request['type'] == rtype):
                     await message.reply(
-                        'Request %s is already in the list' %
-                        splitted[1]
+                        pakreq.telegram_consts.IS_ALREADY_IN_THE_LIST
+                        .format(
+                            rtype=escape(splitted[0][1:].capitalize()),
+                            name=escape(str(splitted[1]))
+                        ),
+                        parse_mode='HTML'
                     )
                     return
             id = await pakreq.db.get_max_request_id(conn) + 1
@@ -105,8 +113,11 @@ class pakreqBot(object):
                 requester_id=user_id
             )
         await message.reply(
-            'Successfully added %s to the list, ID of this request is %s' %
-            (splitted[1], id)
+            pakreq.telegram_consts.SUCCESSFULLY_ADDED.format(
+                rtype=escape(splitted[0][1:]),
+                name=escape(str(splitted[1])),
+                id=str(id)
+            )
         )
 
     async def claim_request(self, message: types.Message):
@@ -128,63 +139,98 @@ class pakreqBot(object):
             user_id = find_user(users, message.from_user.id)
             if user_id is None:
                 await message.reply(
-                    'You have to register or link your pakreq account first'
+                    pakreq.telegram_consts.REGISTER_FIRST,
+                    parse_mode='HTML'
                 )
                 return
             for id in splitted[1:]:
+                new_user_id = user_id
                 try:
                     request = await pakreq.db.get_request(conn, int(id))
                     if not claim:
                         if user_id != request['packager_id']:
-                            result += 'You haven\'t claimed request %s\n' % id
+                            result += pakreq.telegram_consts.CLAIM_FIRST\
+                                .format(
+                                    id=id
+                                )
                             continue
                         else:
-                            user_id = None
+                            new_user_id = None
                     await pakreq.db.update_request(
                         conn, int(id),
-                        packager_id=user_id
+                        packager_id=new_user_id
                     )
-                    result += 'Successfully %sed request %s\n' %\
-                        (splitted[0][1:], id)
-                except pakreq.db.RecordNotFoundException:
-                    result += 'Request ID %s not found\n' % id
+                    result += pakreq.telegram_consts.ACTION_SUCCESSFUL.format(
+                        action=splitted[0][1:],
+                        id=id
+                    )
+                except (pakreq.db.RecordNotFoundException, ValueError):
+                    result += pakreq.telegram_consts.REQUEST_NOT_FOUND.format(
+                        id=id
+                    )
         await message.reply(
-            result
+            result, parse_mode='HTML'
         )
 
     async def register(self, message: types.Message):
         """Implementation of /register, register new user"""
-        logger.info('Registering new user: %s' % message.chat.id)
-        splitted = message.text.split()
-        if len(splitted) == 2:
+        logger.info('Registering new user: %s' % message.from_user.id)
+        splitted = message.text.split(maxsplit=2)
+        if len(splitted) > 2:
             username = splitted[1]
-        elif len(splitted) > 2:
-            await message.reply('Too many arguments')
-            return
+            if len(splitted) == 3:
+                pw = splitted[2]
+            else:
+                pw = None
         else:
             username = message.from_user.username or message.from_user.id
+            pw = None
         async with self.app['db'].acquire() as conn:
             users = await pakreq.db.get_users(conn)
-        if users is not None:
             for user in users:
                 if pakreq.db.OAuthInfo(string=user['oauth_info'])\
                         .info['telegram_id'] == message.from_user.id:
-                    await message.reply('You\'ve already registered')
+                    await message.reply(
+                        pakreq.telegram_consts.ALREADY_REGISTERED,
+                        parse_mode='HTML'
+                    )
                     return
                 if user['username'] == username:
-                    await message.reply('Username already taken, please choose \
-                        another one using <code>/register <username></code>')
-        try:
+                    await message.reply(
+                        pakreq.telegram_consts.USERNAME_ALREADY_TAKEN.format(
+                            username=escape(username)
+                        ),
+                        parse_mode='HTML'
+                    )
+                    return
             oauth_info = pakreq.db.OAuthInfo(telegram_id=message.from_user.id)
-            async with self.app['db'].acquire() as conn:
+            id = await pakreq.db.get_max_user_id(conn)
+            id += 1
+            if pw is not None:
+                pw = password_hash(id, pw, self.app['config']['salt'])
+            try:
                 await pakreq.db.new_user(
-                    conn, username=username, oauth_info=oauth_info
+                    conn, id=id, username=username,
+                    oauth_info=oauth_info, password_hash=pw
                 )
-            await message.reply(
-                'Registeration successful, your username is %s' % username
-            )
-        except Exception:
-            await message.reply('Unable to register, please contact admin')
+                await message.reply(
+                    pakreq.telegram_consts.REGISGER_SUCCESS.format(
+                        username=escape(username)
+                    ),
+                    parse_mode='HTML'
+                )
+                if pw is None:
+                    message.reply(
+                        pakreq.telegram_consts.PASSWORD_EMPTY,
+                        parse_mode='HTML'
+                    )
+            except Exception:
+                await message.reply(
+                    pakreq.telegram_consts.error_msg(
+                        'Unable to register'
+                    ),
+                    parse_mode='HTML'
+                )
 
     async def link_account(self, message: types.Message):
         """Implementation of /link, link telegram account to pakreq account"""
@@ -192,30 +238,41 @@ class pakreqBot(object):
             'Received request to link telegram account: %s' %
             message.from_user.id
         )
-        splitted = message.text.split()
-        if len(splitted) == 3:
-            success = False
-            async with self.app['db'].acquire() as conn:
-                users = await pakreq.db.get_users(conn)
+        splitted = message.text.split(maxsplit=2)
+        if len(splitted) < 3:
+            await message.reply(
+                pakreq.telegram_consts.TOO_FEW_ARGUMENTS,
+                parse_mode='HTML'
+            )
+            return
+        success = False
+        async with self.app['db'].acquire() as conn:
+            users = await pakreq.db.get_users(conn)
             for user in users:
                 if user['username'] == splitted[1]:
-                    p_hash = password_hash(
+                    pw = password_hash(
                         user['id'],
                         splitted[2],
                         self.app['config']['salt']
                     )
-                    if user['password_hash'] == p_hash:
-                        async with self.app['db'].acquire() as conn:
+                    if user['password_hash'] == pw:
+                        oauth_info = pakreq.db.OAuthInfo(
+                            string=user['oauth_info']
+                        ).edit(
+                            telegram_id=message.from_user.id
+                        ).output()
+                        try:
                             await pakreq.db.update_user(
-                                conn,
-                                user['id'],
-                                oauth_info=pakreq.db.OAuthInfo(
-                                    string=user['oauth_info']
-                                    ).edit(
-                                        telegram_id=message.from_user.id
-                                    ).output()
+                                conn, user['id'], oauth_info=oauth_info
                             )
-                        success = True
+                            success = True
+                        except Exception:
+                            await message.reply(
+                                pakreq.telegram_consts.error_msg(
+                                    "Unable to update user info"
+                                ),
+                                parse_mode='HTML'
+                            )
                         break
             if success:
                 # Unlink this Telegram account from other pakreq accounts
@@ -224,50 +281,79 @@ class pakreqBot(object):
                     if user['username'] != splitted[1]:
                         if pakreq.db.OAuthInfo(string=user['oauth_info'])\
                                 .info['telegram_id'] == message.from_user.id:
-                                async with self.app['db'].acquire() as conn:
-                                    await pakreq.db.update_user(
-                                        conn,
-                                        user['id'],
-                                        oauth_info=pakreq.db.OAuthInfo(
-                                            string=user['oauth_info']
-                                        ).edit(
-                                            telegram_id=None
-                                        ).output()
-                                    )
-                await message.reply('Success.')
+                            oauth_info = pakreq.db.OAuthInfo(
+                                string=user['oauth_info']
+                            ).edit(
+                                telegram_id=None
+                            ).output()
+                            try:
+                                await pakreq.db.update_user(
+                                    conn,
+                                    user['id'],
+                                    oauth_info=oauth_info
+                                )
+                            except Exception:
+                                await message.reply(
+                                    pakreq.telegram_consts.error_msg(
+                                        "Unable to update user info",
+                                        "Failed to unlink other accounts."
+                                    ),
+                                    parse_mode='HTML'
+                                )
+                await message.reply(
+                    pakreq.telegram_consts.LINK_SUCCESS.format(
+                        username=splitted[1]
+                    ),
+                    parse_mode='HTML'
+                )
             else:
-                await message.reply('Incorrect username or password')
-        else:
-            await message.reply('Invalid request')
+                await message.reply(
+                    pakreq.telegram_consts.INCORRECT_CREDENTIALS,
+                    parse_mode='HTML'
+                )
 
     async def set_password(self, message: types.Message):
-        """Implementation of /set_pw, set password for user"""
+        """Implementation of /passwd, set password for user"""
         logger.info(
             'Setting new password for Telegram user: %s' % message.from_user.id
         )
-        splitted = message.text.split()
+        splitted = message.text.split(maxsplit=1)
         if len(splitted) == 2:
             async with self.app['db'].acquire() as conn:
                 users = await pakreq.db.get_users(conn)
-            for user in users:
-                if pakreq.db.OAuthInfo(string=user['oauth_info'])\
-                        .info['telegram_id'] == message.from_user.id:
-                    async with self.app['db'].acquire() as conn:
+                user_id = find_user(users, message.from_user.id)
+                if user_id is not None:
+                    pw = password_hash(
+                        user_id,
+                        splitted[1],
+                        self.app['config']['salt']
+                    )
+                    try:
                         await pakreq.db.update_user(
-                            conn, user['id'],
-                            password_hash=password_hash(
-                                user['id'],
-                                splitted[1],
-                                self.app['config']['salt']
+                            conn, user_id,
+                            password_hash=pw
+                        )
+                    except Exception:
+                        await message.reply(
+                            pakreq.telegram_consts.error_msg(
+                                "Unable to set password"
                             )
                         )
-                    await message.reply('Success.')
+                    await message.reply(
+                        pakreq.telegram_consts.PASSWORD_UPDATE_SUCCESS,
+                        parse_mode='HTML'
+                    )
                     return
-            await message.reply(
-                'You have to register or link your account first'
-            )
+                else:
+                    await message.reply(
+                        pakreq.telegram_consts.REGISTER_FIRST,
+                        parse_mode='HTML'
+                    )
         else:
-            await message.reply('Invalid request')
+            await message.reply(
+                pakreq.telegram_consts.TOO_FEW_ARGUMENTS,
+                parse_mode='HTML'
+            )
 
     async def list_requests(self, message: types.Message):
         """Implementation of /list, list requests"""
@@ -277,7 +363,8 @@ class pakreqBot(object):
         if len(splitted) == 1:
             if message.chat.id < 0:
                 await message.reply(
-                    'Listing all requests is only allowed in private chat'
+                    pakreq.telegram_consts.FULL_LIST_PRIVATE_ONLY,
+                    parse_mode='HTML'
                 )
                 return
             async with self.app['db'].acquire() as conn:
@@ -285,28 +372,34 @@ class pakreqBot(object):
             count = 0
             for request in requests:
                 if count < 10:
-                    result = result +\
-                        'ID: %s <b>%s</b> (%s): %s\n' %\
-                        (
-                            request['id'], escape(request['name']),
-                            get_type(request['type']),
-                            escape(request['description'])
-                        )
-                    count += 1
+                    if request['status'] == pakreq.db.RequestStatus.OPEN:
+                        result = result +\
+                            pakreq.telegram_consts.REQUEST_BRIEF_INFO.format(
+                                id=request['id'], name=escape(request['name']),
+                                rtype=get_type(request['type']),
+                                description=escape(request['description'])
+                            )
+                        count += 1
                 else:
                     break
             if count >= 10:
-                result += '\nPlease visit %s for the complete listing' %\
-                    self.app['config']['base_url']
-        elif (len(splitted) > 1) and (len(splitted) <= 6):
+                result += pakreq.telegram_consts.FULL_LIST.format(
+                    url=self.app['config']['base_url']
+                )
+            if result == '':
+                result = pakreq.telegram_consts.NO_PENDING_REQUESTS
+        elif len(splitted) <= 6:
             async with self.app['db'].acquire() as conn:
                 for id in splitted[1:]:
                     try:
-                        request = await pakreq.db.get_request_detail(conn, id)
+                        request = await pakreq.db.get_request_detail(
+                            conn, int(id)
+                        )
                         result += pakreq.telegram_consts.REQUEST_DETAIL.format(
                             name=escape(request['name']),
                             id=request['id'],
-                            type=get_type(request['type']),
+                            status=get_status(request['status']),
+                            rtype=get_type(request['type']),
                             desc=escape(request['description']),
                             req_name=escape(request['requester']['username']),
                             req_id=request['requester']['id'],
@@ -314,21 +407,18 @@ class pakreqBot(object):
                             pak_id=request['packager']['id'],
                             date=request['pub_date'].isoformat(),
                             eta=(request['note'] or 'Empty'))
-
-                    except Exception:
-                        result += '<b>Request ID %s not found.</b>\n' % id
+                    except (pakreq.db.RecordNotFoundException, ValueError):
+                        result +=\
+                            pakreq.telegram_consts.REQUEST_NOT_FOUND.format(
+                                id=id
+                            )
         else:
-            result = 'Too many arugments'
-        if result == '':
-            result = 'No pending requests'
+            result = pakreq.telegram_consts.TOO_MANY_ARUGMENTS
         await message.reply(result, parse_mode='HTML')
 
     async def set_note(self, message: types.Message):
         splitted = message.text.split(maxsplit=2)
         note = None
-        if len(splitted) < 2:
-            message.reply('Too few arguments')
-            return
         if len(splitted) == 3:
             note = splitted[2]
         async with self.app['db'].acquire() as conn:
@@ -336,23 +426,37 @@ class pakreqBot(object):
             user_id = find_user(users, message.from_user.id)
             if user_id is None:
                 await message.reply(
-                    'You have to register or link your pakreq account first'
+                    pakreq.telegram_consts.REGISTER_FIRST,
+                    parse_mode='HTML'
                 )
                 return
             try:
                 request = await pakreq.db.get_request(conn, int(splitted[1]))
                 if request['packager_id'] != user_id:
-                    await message.reply('You have to claim it first')
+                    await message.reply(
+                        pakreq.telegram_consts.CLAIM_FIRST.format(
+                            id=int(splitted[1])
+                        ),
+                        parse_mode='HTML'
+                    )
                 await pakreq.db.update_request(
                     conn, int(splitted[1]), note=note
                 )
                 await message.reply('Success.')
-            except pakreq.db.RecordNotFoundException:
+            except (pakreq.db.RecordNotFoundException, ValueError):
                 await message.reply(
-                    'Request ID %s not found' % splitted[1]
+                    pakreq.telegram_consts.REQUEST_NOT_FOUND.format(
+                        id=splitted[1]
+                    )
                 )
-                return
-    
+            except Exception:
+                await message.reply(
+                    pakreq.telegram_consts.error_msg(
+                        'Unable to list requests'
+                    ),
+                    parse_mode='HTML'
+                )
+
     async def set_status(self, message: types.Message):
         def handle_request(command):
             return {
@@ -366,12 +470,19 @@ class pakreqBot(object):
         )
         result = ''
         rtype = handle_request(splitted[0])
+        if rtype == -1:
+            logging.error('Unexpected request type: %s' % splitted[0])
+            await message.reply(pakreq.telegram_consts.error_msg(
+                'Unknown command'
+            ))
+            return
         async with self.app['db'].acquire() as conn:
             users = await pakreq.db.get_users(conn)
             user_id = find_user(users, message.from_user.id)
             if user_id is None:
                 await message.reply(
-                    'You have to register or link your pakreq account first'
+                    pakreq.telegram_consts.REGISTER_FIRST,
+                    parse_mode='HTML'
                 )
                 return
             for id in splitted[1:]:
@@ -380,16 +491,19 @@ class pakreqBot(object):
                     if (splitted[0] == '/done') and\
                             (request['packager_id'] != user_id):
                         result +=\
-                            'You have to claim the request %s\
-                             before mark it as done' %\
-                            id
+                            pakreq.telegram_consts.CLAIM_FIRST.format(
+                                id=id
+                            )
                         continue
                     await pakreq.db.update_request(conn, int(id), status=rtype)
-                    result += 'Successfully processed request id %s' %\
-                        (splitted[0][1:], id)
-                except pakreq.db.RecordNotFoundException:
-                    result += 'Request ID %s not found\n' % id
-        await message.reply(result)
+                    result += pakreq.telegram_consts.PROCESS_SUCCESS.format(
+                        id=id
+                    )
+                except (pakreq.db.RecordNotFoundException, ValueError):
+                    result += pakreq.telegram_consts.REQUEST_NOT_FOUND.format(
+                        id=id
+                    )
+        await message.reply(result, parse_mode='HTML')
 
     def start(self):
         """Register message handlers, and start the bot"""
@@ -397,6 +511,7 @@ class pakreqBot(object):
             (['ping'], self.ping),
             (['list'], self.list_requests),
             (['register'], self.register),
+            (['link'], self.link_account),
             (['passwd'], self.set_password),
             (['help'], self.show_help),
             (['note'], self.set_note),

@@ -1,7 +1,14 @@
+# telegram_consts.py
+
+"""
+Constant strings for telegram.py
+"""
+
 REQUEST_DETAIL = """\
 <b>{name}</b>:
   <b>ID</b>: {id}
-  <b>Type</b>: {type}
+  <b>Status</b>: {status}
+  <b>Type</b>: {rtype}
   <b>Description</b>: {desc}
   <b>Requester</b>: {req_name}({req_id})
   <b>Packager</b>: {pak_name}({pak_id})
@@ -10,14 +17,104 @@ REQUEST_DETAIL = """\
 
 """
 
-ERROR_MSG = """
+FULL_LIST = """
+Please visit {url} for the full listing.
+"""
+
+REQUEST_BRIEF_INFO = """\
+ID: {id} <b>{name}</b> (<i>{rtype}</i>): {description}
+"""
+
+REGISTER_FIRST = """\
+You have to <b>register</b> or <b>link</b> your account first.
+Please refer to /help for full usage.
+"""
+
+TOO_FEW_ARGUMENTS = """\
+Too <b>few</b> arguments.
+Please refer to /help for full usage.
+"""
+
+TOO_MANY_ARUGMENTS = """\
+Too <b>many</b> arguments.
+Please refer to /help for full usage.
+"""
+
+NO_PENDING_REQUESTS = """\
+No pending request.
+"""
+
+INVALID_REQUEST = """\
+Invalid request, use /help to view the full usage.
+"""
+
+IS_ALREADY_IN_THE_LIST = """\
+{rtype} {name} is <b>already</b> in the list.
+"""
+
+SUCCESSFULLY_ADDED = """\
+Successfully added {name} to the {rtype} list, id of this request is {id}.
+"""
+
+CLAIM_FIRST = """\
+<b>You have to claim request {id} first.</b>
+"""
+
+ACTION_SUCCESSFUL = """\
+Successfully <b>{action}ed</b> request <b>{id}</b>.
+"""
+
+REQUEST_NOT_FOUND = """\
+<b>Request ID {id} not found.</b>
+"""
+
+ALREADY_REGISTERED = """\
+You've already registered.
+"""
+
+USERNAME_ALREADY_TAKEN = """\
+Username {username} already taken, please specify another one by:
+<code>/register [username] [password]</code>
+"""
+
+REGISGER_SUCCESS = """\
+Registeration successful, your username is {username}.
+"""
+
+PASSWORD_EMPTY = """\
+You password is empty right now, please set a new password by:
+<code>/passwd [password]</code>
+"""
+
+LINK_SUCCESS = """\
+Successfully linked {username} to this telegram account.
+"""
+
+INCORRECT_CREDENTIALS = """\
+Link unsuccessful: Incorrect username or password.
+"""
+
+PASSWORD_UPDATE_SUCCESS = """\
+Password set successfully.
+"""
+
+FULL_LIST_PRIVATE_ONLY = """\
+Listing all requests is only allowed in private chats.
+"""
+
+PROCESS_SUCCESS = """\
+Successfully processed request {id}.
+"""
+
+ERROR_MSG = """\
 Sorry, this bot has encountered an error: {err}
 Details: {err_detail}
 
-Please open a new ticket at https://github.com/AOSC-dev/pakreqBot-ng/issues/new
+Please try again later and/or\
+ open a new ticket at https://github.com/AOSC-dev/pakreqBot-ng/issues/new
 """
 
-HELP_CRUFT = """
+HELP_CRUFT = """\
 A bot designed to <b>EXECUTE</b> Jelly.
 
 Command list:

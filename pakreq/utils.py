@@ -10,7 +10,7 @@ from json import dumps
 from hashlib import sha3_384
 from datetime import date, datetime
 
-from pakreq.db import RequestType
+from pakreq.db import RequestType, RequestStatus
 
 # Configuration checker
 TRAFARET = T.Dict({
@@ -52,6 +52,18 @@ def get_type(type):
         return 'optreq'
     else:
         return 'UnknownJellyExecutorException'
+
+
+def get_status(status):
+    """Get request status"""
+    if status == RequestStatus.OPEN:
+        return 'open'
+    elif status == RequestStatus.DONE:
+        return 'done'
+    elif status == RequestStatus.REJECTED:
+        return 'rejected'
+    else:
+        return 'UnknownJellyStatusException'
 
 
 def password_hash(id, password, salt):

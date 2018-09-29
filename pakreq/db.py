@@ -181,7 +181,7 @@ async def new_request(
 ):
     """Create new request"""
     # Initializing values
-    id = id or await get_max_id(conn, REQUEST) + 1
+    id = id or (await get_max_id(conn, REQUEST) + 1)
     statement = REQUEST.insert(None).values(
         id=id, status=status, type=rtype, name=name,
         description=description, requester_id=requester_id,
@@ -208,12 +208,12 @@ async def get_request_detail(conn, id):
 
 
 async def new_user(
-    conn, username, admin=False,
+    conn, username, id=None, admin=False,
     password_hash=None, oauth_info=OAuthInfo()
 ):
     """Create new user"""
     # Initializing values
-    id = await get_max_id(conn, USER) + 1
+    id = id or (await get_max_id(conn, USER) + 1)
     statement = USER.insert(None).values(
         id=id, username=username, admin=admin,
         password_hash=password_hash,
