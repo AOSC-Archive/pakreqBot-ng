@@ -313,7 +313,7 @@ class pakreqBot(object):
                             pak_name=escape(request['packager']['username']),
                             pak_id=request['packager']['id'],
                             date=request['pub_date'].isoformat(),
-                            eta=(request['eta'] or 'Unset'))
+                            eta=(request['note'] or 'Empty'))
 
                     except Exception:
                         result += '<b>Request ID %s not found.</b>\n' % id
@@ -323,6 +323,36 @@ class pakreqBot(object):
             result = 'No pending requests'
         await message.reply(result, parse_mode='HTML')
 
+    async def set_note(self, message: types.Message):
+        splitted = message.text.split(maxsplit=2)
+        note = None
+        if len(splitted) < 2:
+            message.reply('Too few arguments')
+            return
+        if len(splitted) == 3:
+            note = splitted[2]
+        async with self.app['db'].acquire() as conn:
+            users = await pakreq.db.get_users(conn)
+            user_id = find_user(users, message.from_user.id)
+            if user_id is None:
+                await message.reply(
+                    'You have to register or link your pakreq account first'
+                )
+                return
+            try:
+                request = await pakreq.db.get_request(conn, int(splitted[1]))
+                if request['packager_id'] != user_id:
+                    await message.reply('You have to claim it first')
+                await pakreq.db.update_request(
+                    conn, int(splitted[1]), note=note
+                )
+                await message.reply('Success.')
+            except pakreq.db.RecordNotFoundException:
+                await message.reply(
+                    'Request ID %s not found' % splitted[1]
+                )
+                return
+
     def start(self):
         """Register message handlers, and start the bot"""
         commands_mapping = [
@@ -331,6 +361,7 @@ class pakreqBot(object):
             (['register'], self.register),
             (['passwd'], self.set_password),
             (['help'], self.show_help),
+            (['note'], self.set_note),
             (['claim', 'unclaim'], self.claim_request),
             (['pakreq', 'updreq', 'optreq'], self.new_request)
         ]

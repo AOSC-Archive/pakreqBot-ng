@@ -6,7 +6,7 @@ REQUEST_DETAIL = """
   <b>Requester</b>: {req_name}({req_id})
   <b>Packager</b>: {pak_name}({pak_id})
   <b>Created on</b>: {date}
-  <b>ETA</b>: {eta}
+  <b>Note</b>: {eta}
 """
 
 ERROR_MSG = """

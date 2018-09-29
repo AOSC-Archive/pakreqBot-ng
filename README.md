@@ -27,6 +27,6 @@ TODO
     - [x] /pakreq, /updreq, /optreq
     - [x] /claim, /unclaim
     - [ ] /done, /reject
-    - [ ] /set_eta
+    - [x] /note
     - [ ] /help (Update needed)
 ...

@@ -92,7 +92,7 @@ REQUEST = Table(
     Column('requester_id', Integer, ForeignKey('user.id'), nullable=False),
     Column('packager_id', Integer, ForeignKey('user.id')),
     Column('pub_date', Date, nullable=False),
-    Column('eta', String, nullable=True),
+    Column('note', String, nullable=True),
     sqlite_autoincrement=True
 )
 
@@ -177,7 +177,7 @@ async def new_request(
     conn, id=None, status=RequestStatus.OPEN, rtype=RequestType.PAKREQ,
     name='Unknown', description='Unknown',
     requester_id=0, packager_id=0,
-    date=datetime.now(), eta=None
+    date=datetime.now(), note=None
 ):
     """Create new request"""
     # Initializing values
@@ -186,7 +186,7 @@ async def new_request(
         id=id, status=status, type=rtype, name=name,
         description=description, requester_id=requester_id,
         packager_id=packager_id, pub_date=date,
-        eta=eta
+        note=note
     )
     await conn.execute(statement)
     await conn.commit()
