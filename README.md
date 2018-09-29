@@ -25,7 +25,7 @@ TODO
   - [ ] Basic functionality
     - [x] /list
     - [x] /pakreq, /updreq, /optreq
-    - [ ] /claim, /unclaim
+    - [x] /claim, /unclaim
     - [ ] /done, /reject
     - [ ] /set_eta
     - [ ] /help (Update needed)

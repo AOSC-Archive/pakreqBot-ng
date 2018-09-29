@@ -24,6 +24,14 @@ def escape(text):
     return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 
+def find_user(users, id):
+    for user in users:
+        if pakreq.db.OAuthInfo(string=user['oauth_info'])\
+                .info['telegram_id'] == id:
+            return user['id']
+    return None
+
+
 class pakreqBot(object):
     """pakreqBot main object"""
 
@@ -89,6 +97,49 @@ class pakreqBot(object):
         await message.reply(
             'Successfully added %s to the list, ID of this request is %s' %
             (splitted[1], id)
+        )
+
+    async def claim_request(self, message: types.Message):
+        splitted = message.text.split()
+        if len(splitted) < 2:
+            await message.reply('Too few arguments')
+            return
+        logger.info(
+            'Received request to claim or unclaim request: %s' %
+            message.text
+        )
+        if splitted[0] == '/claim':
+            claim = True
+        else:
+            claim = False
+        result = ''
+        async with self.app['db'].acquire() as conn:
+            users = await pakreq.db.get_users(conn)
+            user_id = find_user(users, message.from_user.id)
+            if user_id is None:
+                await message.reply(
+                    'You have to register or link your pakreq account first'
+                )
+                return
+            for id in splitted[1:]:
+                try:
+                    request = await pakreq.db.get_request(conn, int(id))
+                    if not claim:
+                        if user_id != request['packager_id']:
+                            result += 'You haven\'t claimed request %s\n' % id
+                            continue
+                        else:
+                            user_id = None
+                    await pakreq.db.update_request(
+                        conn, int(id),
+                        packager_id=user_id
+                    )
+                    result += 'Successfully %sed request %s\n' %\
+                        (splitted[0][1:], id)
+                except pakreq.db.RecordNotFoundException:
+                    result += 'Request ID %s not found\n' % id
+        await message.reply(
+            result
         )
 
     async def register(self, message: types.Message):
@@ -270,6 +321,7 @@ class pakreqBot(object):
             (['register'], self.register),
             (['passwd'], self.set_password),
             (['help'], self.show_help),
+            (['claim', 'unclaim'], self.claim_request),
             (['pakreq', 'updreq', 'optreq'], self.new_request)
         ]
         for command in commands_mapping:
