@@ -106,6 +106,10 @@ PROCESS_SUCCESS = """\
 Successfully processed request {id}.
 """
 
+ONLY_REQUESTER_CAN_EDIT = """\
+Only requester can edit the description for request {id}.
+"""
+
 ERROR_MSG = """\
 Sorry, this bot has encountered an error: {err}
 Details: {err_detail}

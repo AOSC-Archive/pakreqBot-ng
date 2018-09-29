@@ -416,6 +416,7 @@ class pakreqBot(object):
             result = pakreq.telegram_consts.TOO_MANY_ARUGMENTS
         await message.reply(result, parse_mode='HTML')
 
+    # TODO: Simplify the next two functions
     async def set_note(self, message: types.Message):
         splitted = message.text.split(maxsplit=2)
         note = None
@@ -442,7 +443,11 @@ class pakreqBot(object):
                 await pakreq.db.update_request(
                     conn, int(splitted[1]), note=note
                 )
-                await message.reply('Success.')
+                await message.reply(
+                    pakreq.telegram_consts.PROCESS_SUCCESS.format(
+                        id=splitted[1]
+                    )
+                )
             except (pakreq.db.RecordNotFoundException, ValueError):
                 await message.reply(
                     pakreq.telegram_consts.REQUEST_NOT_FOUND.format(
@@ -452,7 +457,52 @@ class pakreqBot(object):
             except Exception:
                 await message.reply(
                     pakreq.telegram_consts.error_msg(
-                        'Unable to list requests'
+                        'Unable to edit request'
+                    ),
+                    parse_mode='HTML'
+                )
+
+    async def edit_desc(self, message: types.Message):
+        splitted = message.text.split(maxsplit=2)
+        desc = None
+        if len(splitted) == 3:
+            desc = splitted[2]
+        async with self.app['db'].acquire() as conn:
+            users = await pakreq.db.get_users(conn)
+            user_id = find_user(users, message.from_user.id)
+            if user_id is None:
+                await message.reply(
+                    pakreq.telegram_consts.REGISTER_FIRST,
+                    parse_mode='HTML'
+                )
+                return
+            try:
+                request = await pakreq.db.get_request(conn, int(splitted[1]))
+                if request['requester_id'] != user_id:
+                    await message.reply(
+                        pakreq.telegram_consts.ONLY_REQUESTER_CAN_EDIT.format(
+                            id=int(splitted[1])
+                        ),
+                        parse_mode='HTML'
+                    )
+                await pakreq.db.update_request(
+                    conn, int(splitted[1]), description=desc
+                )
+                await message.reply(
+                    pakreq.telegram_consts.PROCESS_SUCCESS.format(
+                        id=splitted[1]
+                    )
+                )
+            except (pakreq.db.RecordNotFoundException, ValueError):
+                await message.reply(
+                    pakreq.telegram_consts.REQUEST_NOT_FOUND.format(
+                        id=splitted[1]
+                    )
+                )
+            except Exception:
+                await message.reply(
+                    pakreq.telegram_consts.error_msg(
+                        'Unable to edit request'
                     ),
                     parse_mode='HTML'
                 )
@@ -515,6 +565,7 @@ class pakreqBot(object):
             (['passwd'], self.set_password),
             (['help'], self.show_help),
             (['note'], self.set_note),
+            (['edit_desc'], self.edit_desc),
             (['done', 'reject'], self.set_status),
             (['claim', 'unclaim'], self.claim_request),
             (['pakreq', 'updreq', 'optreq'], self.new_request)
