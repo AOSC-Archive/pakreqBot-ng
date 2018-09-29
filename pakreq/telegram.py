@@ -298,9 +298,9 @@ class pakreqBot(object):
             if count >= 10:
                 result += '\nPlease visit %s for the complete listing' %\
                     self.app['config']['base_url']
-        elif (len(splitted) > 1) and (len(splitted) <= 5):
-            for id in splitted[1:]:
-                async with self.app['db'].acquire() as conn:
+        elif (len(splitted) > 1) and (len(splitted) <= 6):
+            async with self.app['db'].acquire() as conn:
+                for id in splitted[1:]:
                     try:
                         request = await pakreq.db.get_request_detail(conn, id)
                         result += pakreq.telegram_consts.REQUEST_DETAIL.format(

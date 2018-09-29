@@ -1,4 +1,4 @@
-REQUEST_DETAIL = """
+REQUEST_DETAIL = """\
 <b>{name}</b>:
   <b>ID</b>: {id}
   <b>Type</b>: {type}
@@ -7,6 +7,7 @@ REQUEST_DETAIL = """
   <b>Packager</b>: {pak_name}({pak_id})
   <b>Created on</b>: {date}
   <b>Note</b>: {eta}
+
 """
 
 ERROR_MSG = """
