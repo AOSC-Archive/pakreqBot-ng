@@ -81,6 +81,13 @@ class pakreqBot(object):
             ))
             return
         async with self.app['db'].acquire() as conn:
+            users = await pakreq.db.get_users(conn)
+            user_id = find_user(users, message.from_user.id)
+            if user_id is None:
+                await message.reply(
+                    'You have to register or link your pakreq account first'
+                )
+                return
             requests = await pakreq.db.get_requests(conn)
             for request in requests:
                 if (request['name'] == splitted[1]) and\
@@ -91,9 +98,12 @@ class pakreqBot(object):
                     )
                     return
             id = await pakreq.db.get_max_request_id(conn) + 1
-            await pakreq.db.new_request(conn, id=id, rtype=rtype,
-                                        name=splitted[1],
-                                        description=description)
+            await pakreq.db.new_request(
+                conn, id=id, rtype=rtype,
+                name=splitted[1],
+                description=description,
+                requester_id=user_id
+            )
         await message.reply(
             'Successfully added %s to the list, ID of this request is %s' %
             (splitted[1], id)
