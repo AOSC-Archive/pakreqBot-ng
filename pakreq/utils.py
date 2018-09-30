@@ -7,7 +7,7 @@ Utilities
 import trafaret as T
 
 from json import dumps
-from hashlib import sha3_384
+from argon2 import PasswordHasher
 from datetime import date, datetime
 
 from pakreq.db import RequestType, RequestStatus
@@ -25,7 +25,6 @@ TRAFARET = T.Dict({
     T.Key('host'): T.IP,
     T.Key('port'): T.Int(),
     T.Key('base_url'): T.URL,
-    T.Key('salt'): T.String(),
 })
 
 
@@ -66,9 +65,21 @@ def get_status(status):
         return 'UnknownJellyStatusException'
 
 
-def password_hash(id, password, salt):
-    """Calculate password hash (SHA3_384)"""
-    orig = '%s:%s:%s' % (id, password, salt)
-    result = sha3_384()
-    result.update(orig.encode('utf-8'))
-    return result.hexdigest()
+def password_hash(id, password):
+    """Calculate password hash (Argon2), use this function if you want to
+    generate password hashes (register new users)"""
+    hasher = PasswordHasher()
+    orig = '%s:%s' % (id, password)
+    return hasher.hash(orig)
+
+
+def password_verify(id, password, hash):
+    """Verify password hash (Argon2), use this function if you want to
+       authorize logins"""
+    hasher = PasswordHasher()
+    cleartext = '%s:%s' % (id, password)
+    try:
+        hasher.verify(hash, cleartext)
+        return True
+    except Exception:
+        return False

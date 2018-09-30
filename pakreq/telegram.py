@@ -14,7 +14,7 @@ from aiogram.utils import executor
 import pakreq.db
 import pakreq.telegram_consts
 
-from pakreq.utils import get_type, get_status, password_hash
+from pakreq.utils import get_type, get_status, password_hash, password_verify
 
 logger = logging.getLogger(__name__)
 
@@ -220,7 +220,7 @@ class pakreqBot(object):
             id = await pakreq.db.get_max_user_id(conn)
             id += 1
             if pw is not None:
-                pw = password_hash(id, pw, self.app['config']['salt'])
+                pw = password_hash(id, pw)
             try:
                 await pakreq.db.new_user(
                     conn, id=id, username=username,
@@ -263,12 +263,8 @@ class pakreqBot(object):
             users = await pakreq.db.get_users(conn)
             for user in users:
                 if user['username'] == splitted[1]:
-                    pw = password_hash(
-                        user['id'],
-                        splitted[2],
-                        self.app['config']['salt']
-                    )
-                    if user['password_hash'] == pw:
+                    if password_verify(
+                            user['id'], splitted[2], user['password_hash']):
                         oauth_info = pakreq.db.OAuthInfo(
                             string=user['oauth_info']
                         ).edit(
@@ -338,8 +334,7 @@ class pakreqBot(object):
                 if user_id is not None:
                     pw = password_hash(
                         user_id,
-                        splitted[1],
-                        self.app['config']['salt']
+                        splitted[1]
                     )
                     try:
                         await pakreq.db.update_user(

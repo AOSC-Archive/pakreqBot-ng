@@ -7,6 +7,7 @@ Database management utils
 import enum
 import json
 import aiosqlite3.sa
+from argon2 import PasswordHasher
 
 from datetime import datetime
 from sqlalchemy import (
@@ -261,3 +262,21 @@ async def update_user(conn, id, **kwargs):
 async def update_request(conn, id, **kwargs):
     """Update request by ID (wrapper of update_row)"""
     await update_row(conn, REQUEST, id, kwargs)
+
+
+async def check_password(conn, name, password):
+    """Check password and rotate cleartext password if needed"""
+    from pakreq.utils import password_hash, password_verify
+    users = await get_users(conn)
+    status = False
+    for user in users:
+        if user['username'] == name or str(user['id']) == name:
+            hash = user['password_hash']
+            if password_verify(user['id'], password, hash):
+                status = True
+                hasher = PasswordHasher()
+                if hasher.check_needs_rehash(hash):
+                    hash = password_hash(user['id'], password)
+                    await update_user(conn, user['id'], password_hash=hash)
+
+    return status
