@@ -22,6 +22,15 @@ async def index(request):
     return {'requests': requests}
 
 
+@aiohttp_jinja2.template('detail.html')
+async def detail(request):
+    """Detail"""
+    ids = request.match_info['ids']
+    async with request.app['db'].acquire() as conn:
+        requests = await pakreq.db.get_request_detail(conn, ids)
+    return {'request': requests}
+
+
 # JSON
 async def requests_all(request):
     """List requests"""

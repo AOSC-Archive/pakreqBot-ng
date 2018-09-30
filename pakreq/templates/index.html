@@ -3,6 +3,7 @@
 {% set title = "Package Requests" %}
 
 {% block content %}
+<a href="/account.html">My Account</a>
 {% if requests %}
     <ul>
       <table>
@@ -19,7 +20,7 @@
           {% for request in requests %}
               <tr>
                 <td>{{ request.id }}</td>
-                <td>{{ request.name }}</td>
+                <td><a href="/detail/{{ request.id }}">{{ request.name }}</a></td>
                 <td>
                   {% if request.type == 0 %}
                     New

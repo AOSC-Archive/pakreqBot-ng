@@ -130,6 +130,7 @@ Command list:
 /done [package] - Mark a request as done.
 /eta [package] [date(format:YYYY-mm-dd)] - Set an ETA for a request.
 /reject [package] [reason] - Reject a request with [reason].
+/link [username] [password] - Link your pakreq account to your Telegram ID.
 /list [package] - List pending requests.
 /dlist [package] - List done requests.
 /rlist [package] - List rejected requests.
