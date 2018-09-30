@@ -121,20 +121,33 @@ class pakreqBot(object):
         )
 
     async def claim_request(self, message: types.Message):
-        splitted = message.text.split()
-        if len(splitted) < 2:
-            await message.reply('Too few arguments')
-            return
         logger.info(
             'Received request to claim or unclaim request: %s' %
             message.text
         )
+        splitted = message.text.split()
         if splitted[0] == '/claim':
             claim = True
         else:
             claim = False
         result = ''
+        ids = None
         async with self.app['db'].acquire() as conn:
+            if len(splitted) < 2:
+                requests = await pakreq.db.get_requests(conn)
+                for request in requests:
+                    if (request['status'] == pakreq.db.RequestStatus.OPEN) and\
+                            (request['packager_id'] == 0):
+                        ids = [request['id']]
+                        break
+                if ids is None:
+                    await message.reply(
+                        pakreq.telegram_consts.NO_PENDING_REQUESTS,
+                        parse_mode='HTML'
+                    )
+                    return
+            else:
+                ids = splitted[1:]
             users = await pakreq.db.get_users(conn)
             user_id = find_user(users, message.from_user.id)
             if user_id is None:
@@ -143,7 +156,7 @@ class pakreqBot(object):
                     parse_mode='HTML'
                 )
                 return
-            for id in splitted[1:]:
+            for id in ids:
                 new_user_id = user_id
                 try:
                     request = await pakreq.db.get_request(conn, int(id))
