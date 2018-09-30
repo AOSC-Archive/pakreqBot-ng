@@ -32,6 +32,7 @@ install_requires = ['ujson',
                     'aiohttp',
                     'aiosqlite3',
                     'sqlalchemy',
+                    'argon2_cffi',
                     'python-ldap',
                     'aiohttp-jinja2',
                     'trafaret-config']
