@@ -233,7 +233,7 @@ class pakreqBot(object):
                     parse_mode='HTML'
                 )
                 if pw is None:
-                    message.reply(
+                    await message.reply(
                         pakreq.telegram_consts.PASSWORD_EMPTY,
                         parse_mode='HTML'
                     )
