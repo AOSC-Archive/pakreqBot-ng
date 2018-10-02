@@ -3,7 +3,6 @@
 import os
 import sys
 import signal
-import asyncio
 import logging
 
 import jinja2
