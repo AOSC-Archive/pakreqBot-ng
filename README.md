@@ -28,5 +28,5 @@ TODO
     - [x] /claim, /unclaim
     - [x] /done, /reject
     - [x] /note
-    - [ ] /help (Update needed)
+    - [x] /help (Update needed)
 ...

@@ -571,9 +571,9 @@ class pakreqBot(object):
             (['register'], self.register),
             (['link'], self.link_account),
             (['passwd'], self.set_password),
-            (['help'], self.show_help),
             (['note'], self.set_note),
             (['edit_desc'], self.edit_desc),
+            (['start', 'help'], self.show_help),
             (['done', 'reject'], self.set_status),
             (['claim', 'unclaim'], self.claim_request),
             (['pakreq', 'updreq', 'optreq'], self.new_request)

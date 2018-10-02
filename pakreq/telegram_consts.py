@@ -122,22 +122,18 @@ HELP_CRUFT = """\
 A bot designed to <b>EXECUTE</b> Jelly.
 
 Command list:
-/pakreq [package] [description] - Add a new pakreq.
-/updreq [package] [description] - Add a new updreq.
-/optreq [package] [description] - Add a new optreq.
-/claim [package] - Claim a request, leave [package] for a random claim.
-/unclaim [package] - Unclaim  a request.
-/done [package] - Mark a request as done.
-/eta [package] [date(format:YYYY-mm-dd)] - Set an ETA for a request.
-/reject [package] [reason] - Reject a request with [reason].
-/link [username] [password] - Link your pakreq account to your Telegram ID.
-/list [package] - List pending requests.
-/dlist [package] - List done requests.
-/rlist [package] - List rejected requests.
-/passwd [new password] - Set new password.
-/register [user name] - Register a new user.
-/subscribe - Subscribe.
-/unsubscribe - Unsubscribe.
+/register [username] [password] - Register a new account.
+/passwd &lt;password&gt; - Set new password.
+/link [username] [password] - Link your Telegram ID to your pakreq account.
+/pakreq &lt;package name&gt; [description] - Add a new pakreq.
+/updreq &lt;package name&gt; [description] - Add a new updreq.
+/optreq &lt;package name&gt; [description] - Add a new optreq.
+/claim [package id] - Claim a request, leave [package] for a random claim.
+/unclaim &lt;package id&gt; - Unclaim  a request.
+/done &lt;package id&gt; - Mark a request as done.
+/reject &lt;package id&gt; - Reject a request.
+/note &lt;package id&gt; [note] - Set a note for &lt;package id&gt;.
+/list [package id] - List requests by id, up to 5 ids at a time.
 /help - Show this help message.
 """
 
