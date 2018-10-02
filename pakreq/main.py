@@ -19,7 +19,7 @@ from pakreq.middlewares import setup_middlewares
 
 
 def init_app(argv=None):
-    """Initialize aiohtp"""
+    """Initialize aiohttp"""
     app = web.Application()
 
     app['config'] = get_config(argv)
