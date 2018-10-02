@@ -3,8 +3,10 @@ uvloop
 aiogram
 aiohttp
 aiosqlite3
+aiohttp_session[secure]
 sqlalchemy
 argon2_cffi
 python-ldap
 aiohttp-jinja2
+aiohttp-security[session]
 trafaret-config

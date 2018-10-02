@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% set title = "Login" %}
+
+{% block content %}
+<p>
+  <b>{{ msg }}</b>
+</p>
+<br />
+<form action="/login" method="post">
+    Login:
+    <input type="text" name="user" autofocus />
+    Password:
+    <input type="password" name="pwd" />
+    <input type="submit" value="submit" />
+</form>
+{% endblock %}

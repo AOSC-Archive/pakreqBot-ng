@@ -5,8 +5,11 @@ Views
 """
 
 import aiohttp_jinja2
+import logging
 
 from aiohttp import web
+from aiohttp_security import (
+    is_anonymous, forget, remember, check_authorized)
 
 import pakreq.db
 
@@ -20,6 +23,38 @@ async def index(request):
     async with request.app['db'].acquire() as conn:
         requests = await pakreq.db.get_requests(conn)
     return {'requests': requests}
+
+
+@aiohttp_jinja2.template('login.html')
+async def login(request):
+    return
+
+
+async def account(request):
+    if await is_anonymous(request):
+        return web.HTTPFound('/login')
+    return aiohttp_jinja2.render_template('account.html', request, {})
+
+
+async def logout(request):
+    await check_authorized(request)
+    resp = web.HTTPFound('/')
+    await forget(request, resp)
+    return resp
+
+
+async def auth(request):
+    cred = await request.post()
+    user = cred.get('user')
+    resp = web.HTTPFound('/account')
+    async with request.app['db'].acquire() as conn:
+        if await pakreq.db.check_password(conn, user, cred.get('pwd')):
+            # TODO: remember session based on user ID instead of username
+            await remember(request, resp, user)
+            logging.info('%s logged in' % user)
+            return resp
+    return aiohttp_jinja2.render_template('login.html', request,
+                                          {'msg': 'Invaild credentials'})
 
 
 @aiohttp_jinja2.template('detail.html')
