@@ -18,7 +18,7 @@ REQUEST_DETAIL = """\
 """
 
 FULL_LIST = """
-Please visit {url} for the full listing.
+Please visit {url} for the full list of requests.
 """
 
 REQUEST_BRIEF_INFO = """\
@@ -27,17 +27,17 @@ ID: {id} <b>{name}</b> (<i>{rtype}</i>): {description}
 
 REGISTER_FIRST = """\
 You have to <b>register</b> or <b>link</b> your account first.
-Please refer to /help for full usage.
+Please refer to /help for detailed usage.
 """
 
 TOO_FEW_ARGUMENTS = """\
 Too <b>few</b> arguments.
-Please refer to /help for full usage.
+Please refer to /help for detailed usage.
 """
 
 TOO_MANY_ARUGMENTS = """\
 Too <b>many</b> arguments.
-Please refer to /help for full usage.
+Please refer to /help for detailed usage.
 """
 
 NO_PENDING_REQUESTS = """\
@@ -45,7 +45,7 @@ No pending request.
 """
 
 INVALID_REQUEST = """\
-Invalid request, use /help to view the full usage.
+Invalid request, please refer to /help for detailed usage.
 """
 
 IS_ALREADY_IN_THE_LIST = """\
@@ -69,7 +69,7 @@ REQUEST_NOT_FOUND = """\
 """
 
 ALREADY_REGISTERED = """\
-You've already registered.
+You have already registered.
 """
 
 USERNAME_ALREADY_TAKEN = """\
@@ -87,7 +87,7 @@ You password is empty right now, please set a new password by:
 """
 
 LINK_SUCCESS = """\
-Successfully linked {username} to this telegram account.
+Successfully linked this Telegram account to {username}.
 """
 
 INCORRECT_CREDENTIALS = """\
