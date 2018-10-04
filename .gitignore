@@ -20,3 +20,7 @@ obsolete
 
 # egg-info
 pakreq.egg-info
+
+# pytest
+.pytest_cache
+*/.pytest_cache
