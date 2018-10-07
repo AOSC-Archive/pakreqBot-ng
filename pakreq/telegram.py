@@ -8,8 +8,9 @@ import asyncio
 import logging
 
 from aiogram import Bot, types
-from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
+from aiogram.dispatcher import Dispatcher
+from collections import deque
 
 import pakreq.db
 import pakreq.telegram_consts
@@ -563,6 +564,61 @@ class pakreqBot(object):
                     )
         await message.reply(result, parse_mode='HTML')
 
+    async def search_requests(self, message: types.Message):
+        """Implementation of /search, search requests"""
+        logger.info('Received request to search requrest: %s' % message.text)
+        splitted = message.text.split(maxsplit=2)
+        if len(splitted) < 2:
+            await message.reply(
+                pakreq.telegram_consts.TOO_FEW_ARGUMENTS,
+                parse_mode='HTML'
+            )
+            return
+        async with self.app['db'].acquire() as conn:
+            requests = await pakreq.db.get_requests(conn)
+        name_match = deque(
+            (request for request in requests
+                if splitted[1] in request['name']),
+            maxlen=10
+        )
+        desc_match = deque(
+            (request for request in requests
+                if splitted[1] in request['description']),
+            maxlen=10
+        )
+        result_name_match = ''
+        result_desc_match = ''
+        while name_match:
+            request = name_match.pop()
+            result_name_match +=\
+                pakreq.telegram_consts.REQUEST_BRIEF_INFO.format(
+                    id=request['id'], name=escape(request['name']),
+                    rtype=get_type(request['type']),
+                    description=escape(request['description'])
+                )
+        while desc_match:
+            request = desc_match.pop()
+            result_desc_match +=\
+                pakreq.telegram_consts.REQUEST_BRIEF_INFO.format(
+                    id=request['id'], name=escape(request['name']),
+                    rtype=get_type(request['type']),
+                    description=escape(request['description']).replace(
+                        escape(splitted[1]), '<b>%s</b>' % escape(splitted[1])
+                    )
+                )
+        result_name_match = result_name_match or\
+            pakreq.telegram_consts.NO_MATCH_FOUND.format(keyword=splitted[1])
+        result_desc_match = result_desc_match or\
+            pakreq.telegram_consts.NO_MATCH_FOUND.format(keyword=splitted[1])
+        await message.reply(
+            pakreq.telegram_consts.SEARCH_RESULT.format(
+                name_match=result_name_match,
+                description_match=result_desc_match,
+                url=self.app['config']['base_url']
+            ),
+            parse_mode='HTML'
+        )
+
     def start(self):
         """Register message handlers, and start the bot"""
         commands_mapping = [
@@ -570,8 +626,9 @@ class pakreqBot(object):
             (['list'], self.list_requests),
             (['register'], self.register),
             (['link'], self.link_account),
-            (['passwd'], self.set_password),
             (['note'], self.set_note),
+            (['passwd'], self.set_password),
+            (['search'], self.search_requests),
             (['edit_desc'], self.edit_desc),
             (['start', 'help'], self.show_help),
             (['done', 'reject'], self.set_status),

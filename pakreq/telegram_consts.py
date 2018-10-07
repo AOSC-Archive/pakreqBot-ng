@@ -118,6 +118,19 @@ Please try again later and/or\
  open a new ticket at https://github.com/AOSC-dev/pakreqBot-ng/issues/new
 """
 
+SEARCH_RESULT = """\
+<b>Name match</b>:
+{name_match}
+<b>Description match</b>:
+{description_match}
+ONLY 10 requests will be shown, \
+please visit {url} for the full list of requests.
+"""
+
+NO_MATCH_FOUND = """\
+No match for <b>{keyword}</b> found.
+"""
+
 HELP_CRUFT = """\
 A bot designed to <b>EXECUTE</b> Jelly.
 
