@@ -118,6 +118,10 @@ Please try again later and/or\
  open a new ticket at https://github.com/AOSC-dev/pakreqBot-ng/issues/new
 """
 
+WHOAMI = """\
+You are <b>{username}</b> and your user ID is <b>{id}</b>.
+"""
+
 SEARCH_RESULT = """\
 <b>Name match</b>:
 {name_match}
@@ -135,9 +139,11 @@ HELP_CRUFT = """\
 A bot designed to <b>EXECUTE</b> Jelly.
 
 Command list:
+/ping - Pong!
 /register [username] [password] - Register a new account.
 /passwd &lt;password&gt; - Set new password.
 /link [username] [password] - Link your Telegram ID to your pakreq account.
+/whoami - Get information of current account.
 /pakreq &lt;package name&gt; [description] - Add a new pakreq.
 /updreq &lt;package name&gt; [description] - Add a new updreq.
 /optreq &lt;package name&gt; [description] - Add a new optreq.
@@ -145,8 +151,11 @@ Command list:
 /unclaim &lt;package id&gt; - Unclaim  a request.
 /done &lt;package id&gt; - Mark a request as done.
 /reject &lt;package id&gt; - Reject a request.
+/reopen &lt;package id&gt; - Reopen a request.
+/edit_desc &lt;package id&gt; [description] - Edit description.
 /note &lt;package id&gt; [note] - Set a note for &lt;package id&gt;.
 /list [package id] - List requests by id, up to 5 ids at a time.
+/search &lt;keyword&gt; - Search requests.
 /help - Show this help message.
 """
 
