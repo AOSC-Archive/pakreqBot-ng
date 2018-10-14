@@ -22,18 +22,24 @@ async def index(request):
     """Index"""
     async with request.app['db'].acquire() as conn:
         requests = await pakreq.db.get_requests(conn)
-    return {'requests': requests}
+    return {
+        'requests': requests,
+        'base_url': request.app['config']['base_url']
+    }
 
 
 @aiohttp_jinja2.template('login.html')
 async def login(request):
-    return
+    return {'base_url': request.app['config']['base_url']}
 
 
 async def account(request):
     if await is_anonymous(request):
         return web.HTTPFound('/login')
-    return aiohttp_jinja2.render_template('account.html', request, {})
+    return aiohttp_jinja2.render_template(
+        'account.html', request,
+        {'base_url': request.app['config']['base_url']}
+    )
 
 
 async def logout(request):
@@ -63,7 +69,10 @@ async def detail(request):
     ids = request.match_info['ids']
     async with request.app['db'].acquire() as conn:
         requests = await pakreq.db.get_request_detail(conn, ids)
-    return {'request': requests}
+    return {
+        'request': requests,
+        'base_url': request.app['config']['base_url']
+    }
 
 
 # JSON
