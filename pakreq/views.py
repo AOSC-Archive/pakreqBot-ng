@@ -35,7 +35,7 @@ async def login(request):
 
 async def account(request):
     if await is_anonymous(request):
-        return web.HTTPFound('/login')
+        return web.HTTPFound('%s/login' % request.app['config']['base_url'])
     return aiohttp_jinja2.render_template(
         'account.html', request,
         {'base_url': request.app['config']['base_url']}
