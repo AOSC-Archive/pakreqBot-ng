@@ -60,7 +60,7 @@ async def auth(request):
             logging.info('%s logged in' % user)
             return resp
     return aiohttp_jinja2.render_template('login.html', request,
-                                          {'msg': 'Invaild credentials'})
+                                          {'msg': 'Invalid credentials'})
 
 
 @aiohttp_jinja2.template('detail.html')
