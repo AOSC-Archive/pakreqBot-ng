@@ -473,7 +473,7 @@ class PakreqBot(object):
             message.text
         )
         splitted = message.text.split()
-        if splitted[0] == '/claim':
+        if splitted[0].startswith('/claim'):
             claim = True
         else:
             claim = False
@@ -541,11 +541,14 @@ class PakreqBot(object):
     async def set_status(self, message: types.Message):
         """Implementation of /done and /reject, set status for requests."""
         def handle_request(command):
-            return {
-                '/done': pakreq.db.RequestStatus.DONE,
-                '/reject': pakreq.db.RequestStatus.REJECTED,
-                '/reopen': pakreq.db.RequestStatus.OPEN
-            }.get(command, -1)  # There should be only 2 types of requests
+            if command.startswith('/done'):
+                return pakreq.db.RequestStatus.DONE
+            elif command.startswith('/reject'):
+                return pakreq.db.RequestStatus.REJECTED
+            elif command.startswith('/reopen'):
+                return pakreq.db.RequestStatus.OPEN
+            else:
+                return int(-1)  # There should be only 2 types of requests
         splitted = message.text.split()
         logger.info(
             'Received request to mark request(s) as %sed: %s' %
@@ -591,11 +594,14 @@ class PakreqBot(object):
     async def new_request(self, message: types.Message):
         """Implementation of /pakreq, /updreq, /optreq, add new request"""
         def handle_request(command):
-            return {
-                '/pakreq': pakreq.db.RequestType.PAKREQ,
-                '/optreq': pakreq.db.RequestType.OPTREQ,
-                '/updreq': pakreq.db.RequestType.UPDREQ
-            }.get(command, -1)  # There should be only 3 types of requests
+            if command.startswith('/pakreq'):
+                return pakreq.db.RequestType.PAKREQ
+            elif command.startswith('/updreq'):
+                return pakreq.db.RequestType.UPDREQ
+            elif command.startswith('/optreq'):
+                return pakreq.db.RequestType.OPTREQ
+            else:
+                return int(-1)  # There should be only 3 types of requests
         logger.info('Received request to add a new request: %s' % message.text)
         splitted = message.text.split(maxsplit=2)
         logger.info('Adding new request: %s' % splitted[1])
@@ -613,7 +619,8 @@ class PakreqBot(object):
             logging.error('Unexpected request type: %s' % splitted[0])
             await message.reply(
                 pakreq.telegram_consts.error_msg(
-                    'Unexpected request type'
+                    err='Unexpected request type',
+                    err_detail=splitted[0]
                 ),
                 parse_mode='HTML'
             )
