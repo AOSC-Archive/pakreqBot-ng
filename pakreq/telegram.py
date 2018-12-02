@@ -511,8 +511,8 @@ class PakreqBot(object):
                         if user_id != request['packager_id']:
                             result += pakreq.telegram_consts.CLAIM_FIRST \
                                 .format(
-                                id=id
-                            )
+                                    id=id
+                                )
                             continue
                         else:
                             new_user_id = None
@@ -521,7 +521,7 @@ class PakreqBot(object):
                         packager_id=new_user_id
                     )
                     result += pakreq.telegram_consts.ACTION_SUCCESSFUL.format(
-                        action=splitted[0][1:],
+                        action=splitted[0].split('@')[0][1:],
                         id=request_id
                     )
                 except (pakreq.db.RecordNotFoundException, ValueError):
@@ -574,7 +574,7 @@ class PakreqBot(object):
             for id in splitted[1:]:
                 try:
                     request = await pakreq.db.get_request(conn, int(id))
-                    if (splitted[0] == '/done') and \
+                    if (splitted[0].startswith('/done')) and \
                             (request['packager_id'] != user_id):
                         result += \
                             pakreq.telegram_consts.CLAIM_FIRST.format(
@@ -641,7 +641,7 @@ class PakreqBot(object):
                     await message.reply(
                         pakreq.telegram_consts.IS_ALREADY_IN_THE_LIST
                         .format(
-                            rtype=escape(splitted[0][1:].capitalize()),
+                            rtype=escape(splitted[0].split('@')[0][1:].capitalize()),
                             name=escape(str(splitted[1]))
                         ),
                         parse_mode='HTML'
@@ -656,7 +656,7 @@ class PakreqBot(object):
             )
         await message.reply(
             pakreq.telegram_consts.SUCCESSFULLY_ADDED.format(
-                rtype=escape(splitted[0][1:]),
+                rtype=escape(splitted[0].split('@')[0][1:]),
                 name=escape(str(splitted[1])),
                 id=str(id)
             )
