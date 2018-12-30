@@ -9,7 +9,8 @@ import logging
 
 from aiohttp import web
 from aiohttp_security import (
-    is_anonymous, forget, remember, check_authorized)
+    is_anonymous, forget, remember, check_authorized, check_permission,
+    authorized_userid)
 
 import pakreq.db
 
@@ -38,7 +39,8 @@ async def account(request):
         return web.HTTPFound('%s/login' % request.app['config']['base_url'])
     return aiohttp_jinja2.render_template(
         'account.html', request,
-        {'base_url': request.app['config']['base_url']}
+        {'base_url': request.app['config']['base_url'],
+         'username': await authorized_userid(request)}
     )
 
 
