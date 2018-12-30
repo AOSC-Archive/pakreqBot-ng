@@ -16,6 +16,7 @@ from pakreq.routes import setup_routes
 from pakreq.settings import get_config
 from pakreq.telegram import start_bot
 from pakreq.middlewares import setup_middlewares
+from pakreq.ldap import PakreqLDAP
 
 
 def init_app(argv=None):
@@ -23,6 +24,7 @@ def init_app(argv=None):
     app = web.Application()
 
     app['config'] = get_config(argv)
+    app['ldap'] = PakreqLDAP(app['config']['ldap_url'])
 
     # Setup jinja2
     aiohttp_jinja2.setup(
