@@ -25,10 +25,12 @@ def setup_routes(app):
     key = base64.urlsafe_b64decode(Fernet.generate_key())
     setup_session(app, EncryptedCookieStorage(key))
     setup_security(app, SessionIdentityPolicy(), PakreqAuth(app))
-    app.router.add_get('/', index)
-    app.router.add_get('/detail/{ids:([0-9]*)}', detail)
+    # RESTful API
     app.router.add_get('/requests', requests_all)
     app.router.add_get('/request/{ids:([0-9]*)}', request_detail)
+    # Pages
+    app.router.add_get('/detail/{ids:([0-9]*)}', detail)
+    app.router.add_get('/', index)
     app.router.add_get('/login', login)
     app.router.add_post('/login', auth)
     app.router.add_get('/account', account)
