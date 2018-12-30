@@ -22,15 +22,7 @@
                 <td>{{ request.id }}</td>
                 <td><a href="{{ base_url }}/detail/{{ request.id }}">{{ request.name }}</a></td>
                 <td>
-                  {% if request.type == 0 %}
-                    New
-                  {% elif request.type == 1 %}
-                    Update
-                  {% elif request.type == 2 %}
-                    Optimize
-                  {% else %}
-                    Unknown
-                  {% endif %}
+                  {{ pakreqType(request.type) }}
                 </td>
                 <td>{{ request.pub_date }}</td>
                 <td>{{ request.description }}</td>

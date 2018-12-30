@@ -1,3 +1,15 @@
+{% macro pakreqType(type) -%}
+  {% if type._value_ == 0 %}
+    New
+  {% elif type._value_ == 1 %}
+    Update
+  {% elif type._value_ == 2 %}
+    Optimize
+  {% else %}
+    Unknown
+  {% endif %}
+{%- endmacro %}
+
 <!DOCTYPE html>
 <html>
   <head>
