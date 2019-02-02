@@ -3,36 +3,36 @@
 {% set title = "Package Requests" %}
 
 {% block content %}
-<a href="{{ base_url }}/account">My Account</a>
-{% if requests %}
-    <ul>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Date</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for request in requests %}
-              <tr>
-                <td>{{ request.id }}</td>
-                <td><a href="{{ base_url }}/detail/{{ request.id }}">{{ request.name }}</a></td>
-                <td>
-                  {{ pakreqType(request.type) }}
-                </td>
-                <td>{{ request.pub_date }}</td>
-                <td>{{ request.description }}</td>
-              </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </ul>
-    <p>{{ count }} (pending) request(s) total</p>
-{% else %}
-    <p>No requests</p>
-{% endif %}
+    <a href="{{ base_url }}/account">My Account</a>
+    {% if requests %}
+        <ul>
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for request in requests %}
+                    <tr>
+                        <td>{{ request.id }}</td>
+                        <td><a href="{{ base_url }}/detail/{{ request.id }}">{{ request.name }}</a></td>
+                        <td>
+                            {{ pakreqType(request.type) }}
+                        </td>
+                        <td>{{ request.pub_date }}</td>
+                        <td>{{ request.description }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </ul>
+        <p>{{ count }} (pending) request(s) total</p>
+    {% else %}
+        <p>No requests</p>
+    {% endif %}
 {% endblock %}

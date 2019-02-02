@@ -3,85 +3,87 @@
 {% set title = "Request Details" %}
 
 {% block content %}
-<!-- Toolbar -->
-<table>
-  <tbody>
-    <tr>
-      <td>
-        <a href="{{ base_url }}/">Back to listing</a>
-      </td>
-      <td>
-        <a href="{{ base_url }}/account">My Account</a>
-      </td>
-    </tr>
-  </tbody>
+    <!-- Toolbar -->
+    <table>
+        <tbody>
+        <tr>
+            <td>
+                <a href="{{ base_url }}/">Back to listing</a>
+            </td>
+            <td>
+                <a href="{{ base_url }}/account">My Account</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
 
-<!-- Details -->
-<table>
-  <tbody>
-    <tr>
-      <td>
-        ID
-      </td>
-      <td>
-        {{ request.id }}
-      </td>
-    </tr>
-    <tr>
-      <td>
-        Name
-      </td>
-      <td>
-        {{ request.name }}
-      </td>
-    </tr>
-    <tr>
-      <td>
-        Type
-      </td>
-      <td>
-        {{ pakreqType(request.type) }}
-      </td>
-    </tr>
-    <tr>
-      <td>
-        Published Date
-      </td>
-      <td>
-        {{ request.pub_date }}
-      </td>
-    </tr>
-    <tr>
-      <td>
-        Description
-      </td>
-      <td>
-        {{ request.description }}
-      </td>
-    </tr>
-    <tr>
-      <td>
-        Requested By
-      </td>
-      <td>
-        {{ request.requester.username }}
-      </td>
-    </tr>
-    <tr>
-      <td>
-        Claimed By
-      </td>
-      <td>
-        {{ request.packager.username }}
-      </td>
-    </tr>
-    <tr>
-      <td>
-        ETA
-      </td>
-      <td>
-        {{ request.note }}
-      </td>
-    </tr>
-  </tbody>
+    <!-- Details -->
+    <table>
+        <tbody>
+        <tr>
+            <td>
+                ID
+            </td>
+            <td>
+                {{ request.id }}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Name
+            </td>
+            <td>
+                {{ request.name }}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Type
+            </td>
+            <td>
+                {{ pakreqType(request.type) }}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Published Date
+            </td>
+            <td>
+                {{ request.pub_date }}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Description
+            </td>
+            <td>
+                {{ request.description }}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Requested By
+            </td>
+            <td>
+                {{ request.requester.username }}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Claimed By
+            </td>
+            <td>
+                {{ request.packager.username }}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                ETA
+            </td>
+            <td>
+                {{ request.note }}
+            </td>
+        </tr>
+        </tbody>
+    </table>
 {% endblock %}

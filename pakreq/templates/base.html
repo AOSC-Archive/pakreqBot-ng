@@ -1,27 +1,27 @@
 {% macro pakreqType(type) -%}
-  {% if type._value_ == 0 %}
-    New
-  {% elif type._value_ == 1 %}
-    Update
-  {% elif type._value_ == 2 %}
-    Optimize
-  {% else %}
-    Unknown
-  {% endif %}
+    {% if type._value_ == 0 %}
+        New
+    {% elif type._value_ == 1 %}
+        Update
+    {% elif type._value_ == 2 %}
+        Optimize
+    {% else %}
+        Unknown
+    {% endif %}
 {%- endmacro %}
 
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     {% block head %}
-        <title>{{title}}</title>
+        <title>{{ title }}</title>
     {% endblock %}
-  </head>
-  <body>
-    <h1>{{title}}</h1>
-    <div>
-      {% block content %}
-      {% endblock %}
-    </div>
-  </body>
+</head>
+<body>
+<h1>{{ title }}</h1>
+<div>
+    {% block content %}
+    {% endblock %}
+</div>
+</body>
 </html>

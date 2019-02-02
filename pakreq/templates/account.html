@@ -3,33 +3,33 @@
 {% set title = "Account Settings" %}
 
 {% block content %}
-<a href="{{ base_url }}/logout">Log Out</a>
-<p>Username: {{ username }}</p>
-<h3>User Settings</h3>
-<form method="post">
-  <table>
-    <tbody>
-      <tr>
-        <b>Change Password</b>
-      </tr>
-      <tr>
-        <td>Current password:</td>
-        <td><input type="password" name="cpwd" value="" required></td>
-      </tr>
-      <tr>
-        <td>New password:</td>
-        <td><input type="password" name="npwd" value="" required></td>
-      </tr>
-      <tr>
-        <td>Confirm new password:</td>
-        <td><input type="password" name="cnpwd" value="" required></td>
-      </tr>
-      <tr>
-        <td>
-          <input type="submit" name="submit" value="Submit">
-          </td>
-        </tr>
-    </tbody>
-  </table>
-</form>
+    <a href="{{ base_url }}/logout">Log Out</a>
+    <p>Username: {{ username }}</p>
+    <h3>User Settings</h3>
+    <form method="post">
+        <table>
+            <tbody>
+            <tr>
+                <b>Change Password</b>
+            </tr>
+            <tr>
+                <td>Current password:</td>
+                <td><input type="password" name="cpwd" value="" required></td>
+            </tr>
+            <tr>
+                <td>New password:</td>
+                <td><input type="password" name="npwd" value="" required></td>
+            </tr>
+            <tr>
+                <td>Confirm new password:</td>
+                <td><input type="password" name="cnpwd" value="" required></td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="submit" name="submit" value="Submit">
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </form>
 {% endblock %}
