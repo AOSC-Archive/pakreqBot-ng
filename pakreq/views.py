@@ -22,9 +22,10 @@ from pakreq.utils import dump_json
 async def index(request):
     """Index"""
     async with request.app['db'].acquire() as conn:
-        requests = await pakreq.db.get_requests(conn)
+        reqs = await pakreq.db.get_requests(conn)
+    reqs = [req for req in reqs if req["status"] == pakreq.db.RequestStatus.OPEN]
     return {
-        'requests': requests,
+        'requests': reqs,
         'base_url': request.app['config']['base_url']
     }
 
@@ -70,9 +71,9 @@ async def detail(request):
     """Detail"""
     ids = request.match_info['ids']
     async with request.app['db'].acquire() as conn:
-        requests = await pakreq.db.get_request_detail(conn, ids)
+        reqs = await pakreq.db.get_request_detail(conn, ids)
     return {
-        'request': requests,
+        'request': reqs,
         'base_url': request.app['config']['base_url']
     }
 
