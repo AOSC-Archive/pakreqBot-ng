@@ -26,6 +26,7 @@ async def index(request):
     reqs = [req for req in reqs if req["status"] == pakreq.db.RequestStatus.OPEN]
     return {
         'requests': reqs,
+        'count': str(len(reqs)),
         'base_url': request.app['config']['base_url']
     }
 
