@@ -13,6 +13,7 @@ from aiogram.dispatcher import Dispatcher
 from collections import deque
 
 import pakreq.db
+import pakreq.pakreq
 import pakreq.telegram_consts
 
 from pakreq.utils import get_type, get_status, password_hash, password_verify
@@ -64,7 +65,7 @@ class PakreqBot(object):
             return
         success = False
         async with self.app['db'].acquire() as conn:
-            users = await pakreq.db.get_users(conn)
+            users = await pakreq.pakreq.get_users(conn)
             for user in users:
                 if user['username'] == splitted[1]:
                     if password_verify(
@@ -75,7 +76,7 @@ class PakreqBot(object):
                             telegram_id=message.from_user.id
                         ).output()
                         try:
-                            await pakreq.db.update_user(
+                            await pakreq.pakreq.update_user(
                                 conn, user['id'], oauth_info=oauth_info
                             )
                             success = True
@@ -100,7 +101,7 @@ class PakreqBot(object):
                                 telegram_id=None
                             ).output()
                             try:
-                                await pakreq.db.update_user(
+                                await pakreq.pakreq.update_user(
                                     conn,
                                     user['id'],
                                     oauth_info=oauth_info
@@ -138,7 +139,7 @@ class PakreqBot(object):
                 )
                 return
             async with self.app['db'].acquire() as conn:
-                requests = await pakreq.db.get_requests(conn)
+                requests = await pakreq.pakreq.get_requests(conn)
             count = 0
             for request in requests:
                 if count < 10:
@@ -162,7 +163,7 @@ class PakreqBot(object):
             async with self.app['db'].acquire() as conn:
                 for id in splitted[1:]:
                     try:
-                        request = await pakreq.db.get_request_detail(
+                        request = await pakreq.pakreq.get_request_detail(
                             conn, int(id)
                         )
                         result += pakreq.telegram_consts.REQUEST_DETAIL.format(
@@ -195,7 +196,7 @@ class PakreqBot(object):
         if len(splitted) == 3:
             note = splitted[2]
         async with self.app['db'].acquire() as conn:
-            users = await pakreq.db.get_users(conn)
+            users = await pakreq.pakreq.get_users(conn)
             user_id = find_user(users, message.from_user.id)['id']
             if user_id is None:
                 await message.reply(
@@ -204,7 +205,7 @@ class PakreqBot(object):
                 )
                 return
             try:
-                request = await pakreq.db.get_request(conn, int(splitted[1]))
+                request = await pakreq.pakreq.get_request(conn, int(splitted[1]))
                 if request['packager_id'] != user_id:
                     await message.reply(
                         pakreq.telegram_consts.CLAIM_FIRST.format(
@@ -213,7 +214,7 @@ class PakreqBot(object):
                         parse_mode='HTML'
                     )
                     return
-                await pakreq.db.update_request(
+                await pakreq.pakreq.update_request(
                     conn, int(splitted[1]), note=note
                 )
                 await message.reply(
@@ -250,7 +251,7 @@ class PakreqBot(object):
         splitted = message.text.split(maxsplit=1)
         if len(splitted) == 2:
             async with self.app['db'].acquire() as conn:
-                users = await pakreq.db.get_users(conn)
+                users = await pakreq.pakreq.get_users(conn)
                 user_id = find_user(users, message.from_user.id)['id']
                 if user_id is not None:
                     pw = password_hash(
@@ -258,7 +259,7 @@ class PakreqBot(object):
                         splitted[1]
                     )
                     try:
-                        await pakreq.db.update_user(
+                        await pakreq.pakreq.update_user(
                             conn, user_id,
                             password_hash=pw
                         )
@@ -295,7 +296,7 @@ class PakreqBot(object):
             )
             return
         async with self.app['db'].acquire() as conn:
-            requests = await pakreq.db.get_requests(conn)
+            requests = await pakreq.pakreq.get_requests(conn)
         name_match = deque(
             (request for request in requests
              if splitted[1] in request['name']),
@@ -343,7 +344,7 @@ class PakreqBot(object):
         """Implementation of /whoami, get user info"""
         logger.info('Received request to show who that is: %s' % message.text)
         async with self.app['db'].acquire() as conn:
-            users = await pakreq.db.get_users(conn)
+            users = await pakreq.pakreq.get_users(conn)
         user = find_user(users, message.from_user.id)
         if user:
             await message.reply(
@@ -373,7 +374,7 @@ class PakreqBot(object):
             username = message.from_user.username or message.from_user.id
             pw = None
         async with self.app['db'].acquire() as conn:
-            users = await pakreq.db.get_users(conn)
+            users = await pakreq.pakreq.get_users(conn)
             for user in users:
                 if pakreq.db.OAuthInfo(string=user['oauth_info']) \
                         .info['telegram_id'] == message.from_user.id:
@@ -391,12 +392,12 @@ class PakreqBot(object):
                     )
                     return
             oauth_info = pakreq.db.OAuthInfo(telegram_id=message.from_user.id)
-            user_id = await pakreq.db.get_max_user_id(conn)
+            user_id = await pakreq.pakreq.get_max_user_id(conn)
             user_id += 1
             if pw is not None:
                 pw = password_hash(user_id, pw)
             try:
-                await pakreq.db.new_user(
+                await pakreq.pakreq.new_user(
                     conn, id=user_id, username=username,
                     oauth_info=oauth_info, password_hash=pw
                 )
@@ -427,7 +428,7 @@ class PakreqBot(object):
         if len(splitted) == 3:
             desc = splitted[2]
         async with self.app['db'].acquire() as conn:
-            users = await pakreq.db.get_users(conn)
+            users = await pakreq.pakreq.get_users(conn)
             user_id = find_user(users, message.from_user.id)['id']
             if user_id is None:
                 await message.reply(
@@ -436,7 +437,7 @@ class PakreqBot(object):
                 )
                 return
             try:
-                request = await pakreq.db.get_request(conn, int(splitted[1]))
+                request = await pakreq.pakreq.get_request(conn, int(splitted[1]))
                 if request['requester_id'] != user_id:
                     await message.reply(
                         pakreq.telegram_consts.ONLY_REQUESTER_CAN_EDIT.format(
@@ -444,7 +445,7 @@ class PakreqBot(object):
                         ),
                         parse_mode='HTML'
                     )
-                await pakreq.db.update_request(
+                await pakreq.pakreq.update_request(
                     conn, int(splitted[1]), description=desc
                 )
                 await message.reply(
@@ -481,7 +482,7 @@ class PakreqBot(object):
         ids = None
         async with self.app['db'].acquire() as conn:
             if len(splitted) < 2:
-                requests = await pakreq.db.get_requests(conn)
+                requests = await pakreq.pakreq.get_requests(conn)
                 for request in requests:
                     if (request['status'] == pakreq.db.RequestStatus.OPEN) and \
                             (request['packager_id'] == 0):
@@ -495,7 +496,7 @@ class PakreqBot(object):
                     return
             else:
                 ids = splitted[1:]
-            users = await pakreq.db.get_users(conn)
+            users = await pakreq.pakreq.get_users(conn)
             user_id = find_user(users, message.from_user.id)['id']
             if user_id is None:
                 await message.reply(
@@ -506,7 +507,7 @@ class PakreqBot(object):
             for request_id in ids:
                 new_user_id = user_id
                 try:
-                    request = await pakreq.db.get_request(conn, int(request_id))
+                    request = await pakreq.pakreq.get_request(conn, int(request_id))
                     if not claim:
                         if user_id != request['packager_id']:
                             result += pakreq.telegram_consts.CLAIM_FIRST \
@@ -516,7 +517,7 @@ class PakreqBot(object):
                             continue
                         else:
                             new_user_id = None
-                    await pakreq.db.update_request(
+                    await pakreq.pakreq.update_request(
                         conn, int(request_id),
                         packager_id=new_user_id
                     )
@@ -563,7 +564,7 @@ class PakreqBot(object):
             ))
             return
         async with self.app['db'].acquire() as conn:
-            users = await pakreq.db.get_users(conn)
+            users = await pakreq.pakreq.get_users(conn)
             user_id = find_user(users, message.from_user.id)['id']
             if user_id is None:
                 await message.reply(
@@ -573,7 +574,7 @@ class PakreqBot(object):
                 return
             for id in splitted[1:]:
                 try:
-                    request = await pakreq.db.get_request(conn, int(id))
+                    request = await pakreq.pakreq.get_request(conn, int(id))
                     if (splitted[0].startswith('/done')) and \
                             (request['packager_id'] != user_id):
                         result += \
@@ -581,7 +582,7 @@ class PakreqBot(object):
                                 id=id
                             )
                         continue
-                    await pakreq.db.update_request(conn, int(id), status=rtype)
+                    await pakreq.pakreq.update_request(conn, int(id), status=rtype)
                     result += pakreq.telegram_consts.PROCESS_SUCCESS.format(
                         id=id
                     )
@@ -626,7 +627,7 @@ class PakreqBot(object):
             )
             return
         async with self.app['db'].acquire() as conn:
-            users = await pakreq.db.get_users(conn)
+            users = await pakreq.pakreq.get_users(conn)
             user_id = find_user(users, message.from_user.id)['id']
             if user_id is None:
                 await message.reply(
@@ -634,7 +635,7 @@ class PakreqBot(object):
                     parse_mode='HTML'
                 )
                 return
-            requests = await pakreq.db.get_requests(conn)
+            requests = await pakreq.pakreq.get_requests(conn)
             for request in requests:
                 if (request['name'] == splitted[1]) and\
                         (request['type'] == rtype):
@@ -647,8 +648,8 @@ class PakreqBot(object):
                         parse_mode='HTML'
                     )
                     return
-            id = await pakreq.db.get_max_request_id(conn) + 1
-            await pakreq.db.new_request(
+            id = await pakreq.pakreq.get_max_request_id(conn) + 1
+            await pakreq.pakreq.new_request(
                 conn, id=id, rtype=rtype,
                 name=splitted[1],
                 description=description,

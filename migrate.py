@@ -7,6 +7,7 @@ import aiosqlite3
 
 from datetime import datetime
 
+import pakreq.pakreq
 from pakreq import db, settings
 from pakreq.utils import get_type
 from pakreq.telegram import find_user
@@ -18,21 +19,21 @@ OLD_DB = 'old.db'
 async def migrate_user(conn, telegram_id, username=None):
     username = username or telegram_id
     print('>>> Adding user %s(%s)' % (username, telegram_id))
-    users = await db.get_users(conn)
+    users = await pakreq.pakreq.get_users(conn)
     if not find_user(users, telegram_id):
-        await db.new_user(
+        await pakreq.pakreq.new_user(
             conn, username,
             oauth_info=db.OAuthInfo(telegram_id=telegram_id)
         )
 
 
 async def process_requester(conn, telegram_id, username):
-    users = await db.get_users(conn)
+    users = await pakreq.pakreq.get_users(conn)
     if telegram_id is not None:
         packager = find_user(users, telegram_id)
         if not packager:
             await migrate_user(conn, telegram_id, username)
-            users = await db.get_users(conn)
+            users = await pakreq.pakreq.get_users(conn)
             return find_user(users, telegram_id)
         else:
             return packager
@@ -72,7 +73,7 @@ async def main(event_loop):
             date = datetime.strptime(request[7], '%Y-%m-%d %H:%M:%S %Z')
             note = request[8]
             print('>>> Adding request %s(%s): %s' % (name, get_type(rtype), desc))
-            await db.new_request(
+            await pakreq.pakreq.new_request(
                 conn, rtype=rtype, name=name,
                 description=desc, requester_id=requester['id'],
                 packager_id=packager['id'], date=date,

@@ -13,6 +13,7 @@ from aiohttp_security import (
     authorized_userid)
 
 import pakreq.db
+import pakreq.pakreq
 
 from pakreq.utils import dump_json
 
@@ -22,7 +23,7 @@ from pakreq.utils import dump_json
 async def index(request):
     """Index"""
     async with request.app['db'].acquire() as conn:
-        reqs = await pakreq.db.get_requests(conn)
+        reqs = await pakreq.pakreq.get_requests(conn)
     reqs = [req for req in reqs if req["status"] == pakreq.db.RequestStatus.OPEN]
     return {
         'requests': reqs,
@@ -72,7 +73,7 @@ async def detail(request):
     """Detail"""
     ids = request.match_info['ids']
     async with request.app['db'].acquire() as conn:
-        reqs = await pakreq.db.get_request_detail(conn, ids)
+        reqs = await pakreq.pakreq.get_request_detail(conn, ids)
     return {
         'request': reqs,
         'base_url': request.app['config']['base_url']
@@ -83,12 +84,12 @@ async def detail(request):
 async def requests_all(request):
     """List requests"""
     async with request.app['db'].acquire() as conn:
-        result = await pakreq.db.get_requests(conn)
+        result = await pakreq.pakreq.get_requests(conn)
     return web.json_response(result, dumps=dump_json)
 
 
 async def request_detail(request):
     ids = request.match_info['ids']
     async with request.app['db'].acquire() as conn:
-        result = await pakreq.db.get_request_detail(conn, ids)
+        result = await pakreq.pakreq.get_request_detail(conn, ids)
     return web.json_response(result, dumps=dump_json)
