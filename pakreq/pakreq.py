@@ -5,6 +5,20 @@ from datetime import datetime
 from pakreq.db import OAuthInfo
 from pakreq.db import RequestStatus, RequestType, REQUEST, USER
 from pakreq.db import get_max_id, get_row, get_rows, update_row
+from pakreq.packages import get_package_info, search_packages
+
+
+async def find_package(name):
+    info = get_package_info(name)
+    if info['pkg']:
+        return info['pkg']['name']
+    # TODO: handle 303 redirection when there is only one result
+    info = search_packages(name)
+    name_stripped = name.replace('-', '')
+    for package in info['packages']:
+        if package['name'] == name or package['name'] == name_stripped:
+            return package['name']
+    return None
 
 
 async def new_request(
