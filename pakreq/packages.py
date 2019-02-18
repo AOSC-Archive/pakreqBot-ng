@@ -1,9 +1,13 @@
 # packages.py
 
+"""
+Simple packages site API library
+"""
+
 from aiohttp import ClientSession
 
 
-BASE_URL='https://packages.aosc.io'
+BASE_URL = 'https://packages.aosc.io'
 
 
 async def make_request(url, params={}):
