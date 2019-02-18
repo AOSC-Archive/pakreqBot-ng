@@ -2,6 +2,7 @@ ujson
 uvloop
 aiogram
 aiohttp
+packaging
 aiosqlite3
 aiohttp_session[secure]
 sqlalchemy

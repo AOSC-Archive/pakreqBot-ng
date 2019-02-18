@@ -1,18 +1,22 @@
 # pakreq.py
 
+import logging
+
 from datetime import datetime
+from packaging import version
 
 from pakreq.db import OAuthInfo
 from pakreq.db import RequestStatus, RequestType, REQUEST, USER
-from pakreq.db import get_max_id, get_row, get_rows, update_row
+from pakreq.db import get_max_id, get_row, get_rows, update_row, init_db
 from pakreq.packages import get_package_info, search_packages
+
+logger = logging.getLogger(__name__)
 
 
 async def find_package(name):
     info = get_package_info(name)
     if info['pkg']:
         return info['pkg']['name']
-    # TODO: handle 303 redirection when there is only one result
     info = search_packages(name)
     name_stripped = name.replace('-', '')
     for package in info['packages']:
@@ -109,3 +113,51 @@ async def update_user(conn, id, **kwargs):
 async def update_request(conn, id, **kwargs):
     """Update request by ID (wrapper of update_row)"""
     await update_row(conn, REQUEST, id, kwargs)
+
+
+# Daemon part
+class Demon(object):
+    """Maintenance daemon"""
+
+    def __init__(self, config):
+        self.app = dict()
+        self.app['config'] = config
+
+    async def init_db(self):
+        """Initialize database connection"""
+        await init_db(self.app)
+
+    async def clean(self):
+        """Cleanup finished requests"""
+        async with self.app['db'].acquire() as conn:
+            requests = await get_requests(conn)
+            open_requests = [request for request in requests if request['status'] == RequestStatus.OPEN]
+            for request in open_requests:
+                if request['type'] == RequestType.PAKREQ:
+                    if await find_package(request['name']):
+                        logger.info('%s has been packaged, closing' % request['name'])
+                        await update_request(
+                            conn, request['id'], status=RequestStatus.DONE,
+                            note='This package has been packaged.'
+                        )
+                elif request['type'] == RequestType.UPDREQ:
+                    if await find_package(request['name']):
+                        info = get_package_info(request['name'])
+                        try:
+                            if version.parse(info['version']) > version.parse(request['description']):
+                                await update_request(
+                                    conn, request['id'], status=RequestStatus.DONE,
+                                    note='Current version: %s' % info['version']
+                                )
+                        except Exception:
+                            pass
+                    else:
+                        await update_request(
+                            conn, request['id'],status=RequestStatus.REJECTED,
+                            note='404 Package not found'
+                        )
+
+    async def daemon_start(self):
+        """Maintenance daemon"""
+        logger.info('Maintenance daemon starting...')
+        # Need some scheduling stuff
