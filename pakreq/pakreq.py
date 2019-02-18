@@ -140,7 +140,7 @@ class Daemon(object):
             requests = await get_requests(conn)
             open_requests = [request for request in requests if request['status'] == RequestStatus.OPEN]
             for request in open_requests:
-                logger.info('Processing %s (ID: %s)...' % (request['name'], request['id']))
+                logger.debug('Processing %s (ID: %s)...' % (request['name'], request['id']))
                 if request['type'] == RequestType.PAKREQ:
                     if await find_package(request['name']):
                         logger.info('%s has been packaged, closing' % request['name'])
