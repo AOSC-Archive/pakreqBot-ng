@@ -1,23 +1,29 @@
 # pakreq.py
 
+import asyncio
 import logging
 
 from datetime import datetime
 from packaging import version
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from pakreq.db import OAuthInfo
-from pakreq.db import RequestStatus, RequestType, REQUEST, USER
+from pakreq.db import OAuthInfo, RequestStatus, RequestType, REQUEST, USER
 from pakreq.db import get_max_id, get_row, get_rows, update_row, init_db
 from pakreq.packages import get_package_info, search_packages
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 async def find_package(name):
-    info = get_package_info(name)
-    if info['pkg']:
+    info = await get_package_info(name)
+    if not info:
+        return None
+    if 'pkg' in info.keys():
         return info['pkg']['name']
-    info = search_packages(name)
+    info = await search_packages(name)
+    if not info:
+        return None
     name_stripped = name.replace('-', '')
     for package in info['packages']:
         if package['name'] == name or package['name'] == name_stripped:
@@ -116,7 +122,7 @@ async def update_request(conn, id, **kwargs):
 
 
 # Daemon part
-class Demon(object):
+class Daemon(object):
     """Maintenance daemon"""
 
     def __init__(self, config):
@@ -129,10 +135,12 @@ class Demon(object):
 
     async def clean(self):
         """Cleanup finished requests"""
+        logger.info('Start cleaning...')
         async with self.app['db'].acquire() as conn:
             requests = await get_requests(conn)
             open_requests = [request for request in requests if request['status'] == RequestStatus.OPEN]
             for request in open_requests:
+                logger.info('Processing %s (ID: %s)...' % (request['name'], request['id']))
                 if request['type'] == RequestType.PAKREQ:
                     if await find_package(request['name']):
                         logger.info('%s has been packaged, closing' % request['name'])
@@ -142,22 +150,34 @@ class Demon(object):
                         )
                 elif request['type'] == RequestType.UPDREQ:
                     if await find_package(request['name']):
-                        info = get_package_info(request['name'])
-                        try:
-                            if version.parse(info['version']) > version.parse(request['description']):
-                                await update_request(
-                                    conn, request['id'], status=RequestStatus.DONE,
-                                    note='Current version: %s' % info['version']
-                                )
-                        except Exception:
-                            pass
+                        info = await get_package_info(request['name'])
+                        if version.parse(info['pkg']['version']) > version.parse(request['description']):
+                            await update_request(
+                                conn, request['id'], status=RequestStatus.DONE,
+                                note='Current version: %s' % info['pkg']['version']
+                            )
                     else:
                         await update_request(
                             conn, request['id'],status=RequestStatus.REJECTED,
                             note='404 Package not found'
                         )
 
-    async def daemon_start(self):
-        """Maintenance daemon"""
-        logger.info('Maintenance daemon starting...')
-        # Need some scheduling stuff
+    def start(self):
+        scheduler = AsyncIOScheduler()
+        scheduler.add_job(self.clean, 'interval', seconds=600)
+        scheduler.start()
+        try:
+            asyncio.get_event_loop().run_forever()
+        except (KeyboardInterrupt, SystemExit):
+            pass
+
+
+def start_daemon(config):
+    daemon = Daemon(config)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(daemon.init_db())
+    daemon.start()
+    try:
+        loop.run_forever()
+    except (KeyboardInterrupt, SystemExit):
+        pass

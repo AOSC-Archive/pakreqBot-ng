@@ -6,6 +6,7 @@ packaging
 aiosqlite3
 aiohttp_session[secure]
 sqlalchemy
+apscheduler
 argon2_cffi
 python-ldap
 aiohttp-jinja2

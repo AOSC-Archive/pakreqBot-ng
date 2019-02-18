@@ -10,6 +10,7 @@ from json import dumps
 from argon2 import PasswordHasher
 from datetime import date, datetime
 
+import pakreq.db
 from pakreq.db import RequestType, RequestStatus
 
 # Configuration checker
@@ -88,3 +89,19 @@ def password_verify(id, password, hash):
         return True
     except Exception:
         return False
+
+
+def escape(text):
+    """Escape string to avoid explosion"""
+    try:
+        return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    except AttributeError:
+        return 'Unavailable'
+
+
+def find_user(users, user_id):
+    user = (user for user in users
+            if pakreq.db.OAuthInfo(
+                string=user['oauth_info']
+            ).info['telegram_id'] == user_id)
+    return next(user, None)

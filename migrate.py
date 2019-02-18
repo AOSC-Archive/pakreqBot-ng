@@ -9,9 +9,7 @@ from datetime import datetime
 
 import pakreq.pakreq
 from pakreq import db, settings
-from pakreq.utils import get_type
-from pakreq.telegram import find_user
-
+from pakreq.utils import get_type, find_user
 
 OLD_DB = 'old.db'
 

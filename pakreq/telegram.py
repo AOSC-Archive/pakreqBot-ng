@@ -16,25 +16,9 @@ import pakreq.db
 import pakreq.pakreq
 import pakreq.telegram_consts
 
-from pakreq.utils import get_type, get_status, password_hash, password_verify
+from pakreq.utils import get_type, get_status, password_hash, password_verify, escape, find_user
 
 logger = logging.getLogger(__name__)
-
-
-def escape(text):
-    """Escape string to avoid explosion"""
-    try:
-        return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-    except AttributeError:
-        return 'Unavailable'
-
-
-def find_user(users, user_id):
-    user = (user for user in users
-            if pakreq.db.OAuthInfo(
-                string=user['oauth_info']
-            ).info['telegram_id'] == user_id)
-    return next(user, None)
 
 
 class PakreqBot(object):

@@ -14,8 +14,6 @@ from sqlalchemy import (
     Integer, String, Date, Boolean, Enum
 )
 
-from pakreq.pakreq import get_users, update_user
-
 
 class RequestType(enum.Enum):
     """Types of requests"""
@@ -31,7 +29,7 @@ class RequestStatus(enum.Enum):
     REJECTED = 2
 
 
-class OAuthInfo():
+class OAuthInfo(object):
     """OAuth info"""
     # TODO: Make this more elegant
     def __init__(
@@ -175,6 +173,7 @@ async def update_row(conn, table, id, kwargs):
 
 async def check_password(conn, name, password):
     """Check password and rotate cleartext password if needed"""
+    from pakreq.pakreq import get_users, update_user
     from pakreq.utils import password_hash, password_verify
     users = await get_users(conn)
     status = False
