@@ -165,7 +165,7 @@ class Daemon(object):
 
     def start(self):
         scheduler = AsyncIOScheduler()
-        scheduler.add_job(self.clean, 'interval', seconds=1800)
+        scheduler.add_job(self.clean, 'interval', seconds=1800, next_run_time=datetime.now())
         scheduler.start()
 
 
