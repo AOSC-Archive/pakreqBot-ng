@@ -165,12 +165,8 @@ class Daemon(object):
 
     def start(self):
         scheduler = AsyncIOScheduler()
-        scheduler.add_job(self.clean, 'interval', seconds=600)
+        scheduler.add_job(self.clean, 'interval', seconds=1800)
         scheduler.start()
-        try:
-            asyncio.get_event_loop().run_forever()
-        except (KeyboardInterrupt, SystemExit):
-            pass
 
 
 def start_daemon(config):
