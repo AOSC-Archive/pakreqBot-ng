@@ -152,7 +152,8 @@ class Daemon(object):
                 elif request['type'] == RequestType.UPDREQ:
                     if await find_package(request['name']):
                         info = await get_package_info(request['name'])
-                        if version.parse(info['pkg']['version']) > version.parse(request['description']):
+                        if version.parse(info['pkg']['version']) >= version.parse(request['description']):
+                            logger.info('%s has been upgraded, closing...' % request['name'])
                             await update_request(
                                 conn, request['id'], status=RequestStatus.DONE,
                                 note='Current version: %s' % info['pkg']['version']
