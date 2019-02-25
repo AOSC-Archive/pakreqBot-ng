@@ -559,23 +559,21 @@ class PakreqBot(object):
             for id in splitted[1:]:
                 try:
                     request = await pakreq.pakreq.get_request(conn, int(id))
-                    if (rtype == pakreq.db.RequestStatus.DONE) and \
-                            (request['packager_id'] != user_id):
-                        result += \
-                            pakreq.telegram_consts.CLAIM_FIRST.format(
-                                id=id
-                            )
-                        continue
                     if (rtype == pakreq.db.RequestStatus.REJECTED) or \
                             (rtype == pakreq.db.RequestStatus.DONE):
-                        if request['status'] == (pakreq.db.RequestStatus.DONE or
-                                pakreq.db.RequestStatus.REJECTED):
+                        packager_id = user_id
+                        if (request['status'] == pakreq.db.RequestStatus.DONE) or \
+                                (request['status'] == pakreq.db.RequestStatus.REJECTED):
                             result += \
                                 pakreq.telegram_consts.REOPEN_FIRST.format(
                                     id=id
                                 )
                             continue
-                    await pakreq.pakreq.update_request(conn, int(id), status=rtype)
+                    else:
+                        packager_id = request['packager_id']
+                    await pakreq.pakreq.update_request(
+                        conn, int(id), status=rtype, packager_id=packager_id
+                    )
                     result += pakreq.telegram_consts.PROCESS_SUCCESS.format(
                         id=id
                     )
