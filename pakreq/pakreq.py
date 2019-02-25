@@ -147,7 +147,7 @@ class Daemon(object):
                         logger.info('%s has been packaged, closing' % request['name'])
                         await update_request(
                             conn, request['id'], status=RequestStatus.DONE,
-                            note='This package has been packaged.'
+                            note='(BOT) This package has been packaged.'
                         )
                 elif request['type'] == RequestType.UPDREQ:
                     if await find_package(request['name']):
@@ -156,7 +156,7 @@ class Daemon(object):
                             logger.info('%s has been upgraded, closing...' % request['name'])
                             await update_request(
                                 conn, request['id'], status=RequestStatus.DONE,
-                                note='Current version: %s' % info['pkg']['version']
+                                note='(BOT) This package has been updated to: %s' % info['pkg']['version']
                             )
                     else:
                         await update_request(
