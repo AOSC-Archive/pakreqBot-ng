@@ -56,6 +56,10 @@ SUCCESSFULLY_ADDED = """\
 Successfully added {name} to the {rtype} list, id of this request is {id}.
 """
 
+REOPEN_FIRST = """\
+<b>You have to reopen request {id} first.</b>
+"""
+
 CLAIM_FIRST = """\
 <b>You have to claim request {id} first.</b>
 """
