@@ -21,9 +21,9 @@ def read_version():
             match = regexp.match(line)
             if match is not None:
                 return match.group(1)
-        else:
-            msg = 'Cannot find version in pakreq/__init__.py'
-            raise RuntimeError(msg)
+            else:
+                msg = 'Cannot find version in pakreq/__init__.py'
+                raise RuntimeError(msg)
 
 
 install_requires = ['ujson',
