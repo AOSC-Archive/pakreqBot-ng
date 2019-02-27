@@ -1,5 +1,6 @@
 pakreqBot-ng
 ============
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/AOSC-Dev/pakreqBot-ng.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/AOSC-Dev/pakreqBot-ng/context:python) (Really ???)
 
 Gugugu  
 <img src="https://upload.wikimedia.org/wikipedia/commons/4/43/Peace_dove.svg" alt="gugu" width="200" height="200"/>
