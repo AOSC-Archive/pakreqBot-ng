@@ -122,6 +122,13 @@ async def update_request(conn, id, **kwargs):
     await update_row(conn, REQUEST, id, kwargs)
 
 
+# Wrapped
+async def get_open_requests(conn):
+    """Gets all the open requests"""
+    requests = await get_requests(conn)
+    return [ request for request in requests if request['status'] == RequestStatus.OPEN]
+
+
 # Daemon part
 class Daemon(object):
     """Maintenance daemon"""
@@ -138,9 +145,8 @@ class Daemon(object):
         """Cleanup finished requests"""
         logger.info('Start cleaning...')
         async with self.app['db'].acquire() as conn:
-            requests = await get_requests(conn)
-            open_requests = [request for request in requests if request['status'] == RequestStatus.OPEN]
-            for request in open_requests:
+            requests = await get_open_requests(conn)
+            for request in requests:
                 logger.debug('Processing %s (ID: %s)...' % (request['name'], request['id']))
                 if request['type'] == RequestType.PAKREQ:
                     if await find_package(request['name']):
