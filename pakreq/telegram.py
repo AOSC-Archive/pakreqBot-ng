@@ -38,6 +38,7 @@ class PakreqBot(object):
     @staticmethod
     async def check_arguments(message, splitted, condition, notification):
         if condition(len(splitted)):
+            logger.info('Invalid request received')
             await message.reply(
                 notification, parse_mode='HTML'
             )
@@ -52,7 +53,7 @@ class PakreqBot(object):
             message.from_user.id
         )
         splitted = message.text.split(maxsplit=2)
-        if not self.check_arguments(
+        if not await self.check_arguments(
                 message, splitted, lambda x: x < 3,
                 pakreq.telegram_consts.TOO_FEW_ARGUMENTS
         ):
@@ -122,7 +123,7 @@ class PakreqBot(object):
 
     async def list_requests(self, message: types.Message):
         """Implementation of /list, list requests"""
-        logger.info('Received /list: %s' % message.text)
+        logger.info('Received request to list requests: %s' % message.text)
         splitted = message.text.split()
         result = ''
         if len(splitted) == 1:
@@ -186,7 +187,7 @@ class PakreqBot(object):
         """Implementation of /note, set note for a request"""
         logger.info('Received request to set note: %s' % message.text)
         splitted = message.text.split(maxsplit=2)
-        if not self.check_arguments(
+        if not await self.check_arguments(
                 message, splitted, lambda x: x < 2,
                 pakreq.telegram_consts.TOO_FEW_ARGUMENTS
         ):
@@ -249,7 +250,7 @@ class PakreqBot(object):
             'Setting new password for Telegram user: %s' % message.from_user.id
         )
         splitted = message.text.split(maxsplit=1)
-        if not self.check_arguments(
+        if not await self.check_arguments(
                 message, splitted, lambda x: x < 2,
                 pakreq.telegram_consts.TOO_FEW_ARGUMENTS
         ):
@@ -288,7 +289,7 @@ class PakreqBot(object):
         """Implementation of /search, search requests"""
         logger.info('Received request to search requrest: %s' % message.text)
         splitted = message.text.split(maxsplit=1)
-        if not self.check_arguments(
+        if not await self.check_arguments(
                 message, splitted, lambda x: x != 2,
                 pakreq.telegram_consts.INVALID_REQUEST
         ):
@@ -422,7 +423,7 @@ class PakreqBot(object):
         """Implementation of /edit_desc, edit description"""
         logger.info('Received request to edit description: %s' % message.text)
         splitted = message.text.split(maxsplit=2)
-        if not self.check_arguments(
+        if not await self.check_arguments(
                 message, splitted, lambda x: x < 2,
                 pakreq.telegram_consts.TOO_FEW_ARGUMENTS
         ):
@@ -473,7 +474,7 @@ class PakreqBot(object):
     async def claim_request(self, message: types.Message):
         """Implementation of /claim and /unclaim, claim/unclaim request"""
         logger.info(
-            'Received request to claim or unclaim request: %s' %
+            'Received request to claim or unclaim request(s): %s' %
             message.text
         )
         splitted = message.text.split()
@@ -558,7 +559,7 @@ class PakreqBot(object):
             'Received request to mark request(s) as %sed: %s' %
             (splitted[0][1:], message.text)
         )
-        if not self.check_arguments(
+        if not await self.check_arguments(
                 message, splitted, lambda x: x < 2,
                 pakreq.telegram_consts.TOO_FEW_ARGUMENTS
         ):
@@ -620,7 +621,7 @@ class PakreqBot(object):
                 return int(-1)  # There should be only 3 types of requests
         logger.info('Received request to add a new request: %s' % message.text)
         splitted = message.text.split(maxsplit=2)
-        if not self.check_arguments(
+        if not await self.check_arguments(
                 message, splitted, lambda x: x < 2,
                 pakreq.telegram_consts.TOO_FEW_ARGUMENTS
         ):
