@@ -650,7 +650,7 @@ class PakreqBot(object):
                     parse_mode='HTML'
                 )
                 return
-            requests = await pakreq.pakreq.get_requests(conn)
+            requests = await pakreq.pakreq.get_open_requests(conn)
             for request in requests:
                 if (request['name'] == splitted[1]) and\
                         (request['type'] == rtype):
