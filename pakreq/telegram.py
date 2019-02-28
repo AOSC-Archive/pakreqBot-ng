@@ -34,6 +34,17 @@ class PakreqBot(object):
         """Init database connection"""
         await pakreq.db.init_db(self.app)
 
+    # Helper functions
+    @staticmethod
+    async def check_arguments(message, splitted, condition, notification):
+        if condition(len(splitted)):
+            await message.reply(
+                notification, parse_mode='HTML'
+            )
+            return False
+        return True
+
+    # Command handler
     async def link_account(self, message: types.Message):
         """Implementation of /link, link telegram account to pakreq account"""
         logger.info(
@@ -41,11 +52,10 @@ class PakreqBot(object):
             message.from_user.id
         )
         splitted = message.text.split(maxsplit=2)
-        if len(splitted) < 3:
-            await message.reply(
-                pakreq.telegram_consts.TOO_FEW_ARGUMENTS,
-                parse_mode='HTML'
-            )
+        if not self.check_arguments(
+                message, splitted, lambda x: x < 3,
+                pakreq.telegram_consts.TOO_FEW_ARGUMENTS
+        ):
             return
         success = False
         async with self.app['db'].acquire() as conn:
@@ -176,6 +186,11 @@ class PakreqBot(object):
         """Implementation of /note, set note for a request"""
         logger.info('Received request to set note: %s' % message.text)
         splitted = message.text.split(maxsplit=2)
+        if not self.check_arguments(
+                message, splitted, lambda x: x < 2,
+                pakreq.telegram_consts.TOO_FEW_ARGUMENTS
+        ):
+            return
         note = None
         if len(splitted) == 3:
             note = splitted[2]
@@ -220,7 +235,8 @@ class PakreqBot(object):
                     parse_mode='HTML'
                 )
 
-    async def ping(self, message: types.Message):
+    @staticmethod
+    async def ping(message: types.Message):
         """Implementation of /ping, pong"""
         logger.info(
             'Received ping from Telegram user: %s' % message.from_user.id
@@ -233,51 +249,49 @@ class PakreqBot(object):
             'Setting new password for Telegram user: %s' % message.from_user.id
         )
         splitted = message.text.split(maxsplit=1)
-        if len(splitted) == 2:
-            async with self.app['db'].acquire() as conn:
-                users = await pakreq.pakreq.get_users(conn)
-                user_id = find_user(users, message.from_user.id)['id']
-                if user_id is not None:
-                    pw = password_hash(
-                        user_id,
-                        splitted[1]
+        if not self.check_arguments(
+                message, splitted, lambda x: x < 2,
+                pakreq.telegram_consts.TOO_FEW_ARGUMENTS
+        ):
+            return
+        async with self.app['db'].acquire() as conn:
+            users = await pakreq.pakreq.get_users(conn)
+            user_id = find_user(users, message.from_user.id)['id']
+            if user_id is not None:
+                pw = password_hash(
+                    user_id,
+                    splitted[1]
+                )
+                try:
+                    await pakreq.pakreq.update_user(
+                        conn, user_id,
+                        password_hash=pw
                     )
-                    try:
-                        await pakreq.pakreq.update_user(
-                            conn, user_id,
-                            password_hash=pw
-                        )
-                    except Exception:
-                        await message.reply(
-                            pakreq.telegram_consts.error_msg(
-                                "Unable to set password"
-                            )
-                        )
+                except Exception:
                     await message.reply(
-                        pakreq.telegram_consts.PASSWORD_UPDATE_SUCCESS,
-                        parse_mode='HTML'
+                        pakreq.telegram_consts.error_msg(
+                            "Unable to set password"
+                        )
                     )
-                    return
-                else:
-                    await message.reply(
-                        pakreq.telegram_consts.REGISTER_FIRST,
-                        parse_mode='HTML'
-                    )
-        else:
-            await message.reply(
-                pakreq.telegram_consts.TOO_FEW_ARGUMENTS,
-                parse_mode='HTML'
-            )
+                await message.reply(
+                    pakreq.telegram_consts.PASSWORD_UPDATE_SUCCESS,
+                    parse_mode='HTML'
+                )
+                return
+            else:
+                await message.reply(
+                    pakreq.telegram_consts.REGISTER_FIRST,
+                    parse_mode='HTML'
+                )
 
     async def search_requests(self, message: types.Message):
         """Implementation of /search, search requests"""
         logger.info('Received request to search requrest: %s' % message.text)
-        splitted = message.text.split(maxsplit=2)
-        if len(splitted) < 2:
-            await message.reply(
-                pakreq.telegram_consts.TOO_FEW_ARGUMENTS,
-                parse_mode='HTML'
-            )
+        splitted = message.text.split(maxsplit=1)
+        if not self.check_arguments(
+                message, splitted, lambda x: x != 2,
+                pakreq.telegram_consts.INVALID_REQUEST
+        ):
             return
         async with self.app['db'].acquire() as conn:
             requests = await pakreq.pakreq.get_requests(conn)
@@ -312,9 +326,9 @@ class PakreqBot(object):
                     )
                 )
         result_name_match = result_name_match or \
-                            pakreq.telegram_consts.NO_MATCH_FOUND.format(keyword=splitted[1])
+            pakreq.telegram_consts.NO_MATCH_FOUND.format(keyword=splitted[1])
         result_desc_match = result_desc_match or \
-                            pakreq.telegram_consts.NO_MATCH_FOUND.format(keyword=splitted[1])
+            pakreq.telegram_consts.NO_MATCH_FOUND.format(keyword=splitted[1])
         await message.reply(
             pakreq.telegram_consts.SEARCH_RESULT.format(
                 name_match=result_name_match,
@@ -408,6 +422,11 @@ class PakreqBot(object):
         """Implementation of /edit_desc, edit description"""
         logger.info('Received request to edit description: %s' % message.text)
         splitted = message.text.split(maxsplit=2)
+        if not self.check_arguments(
+                message, splitted, lambda x: x < 2,
+                pakreq.telegram_consts.TOO_FEW_ARGUMENTS
+        ):
+            return
         desc = None
         if len(splitted) == 3:
             desc = splitted[2]
@@ -539,6 +558,11 @@ class PakreqBot(object):
             'Received request to mark request(s) as %sed: %s' %
             (splitted[0][1:], message.text)
         )
+        if not self.check_arguments(
+                message, splitted, lambda x: x < 2,
+                pakreq.telegram_consts.TOO_FEW_ARGUMENTS
+        ):
+            return
         result = ''
         rtype = handle_request(splitted[0])
         if rtype == -1:
@@ -596,23 +620,22 @@ class PakreqBot(object):
                 return int(-1)  # There should be only 3 types of requests
         logger.info('Received request to add a new request: %s' % message.text)
         splitted = message.text.split(maxsplit=2)
+        if not self.check_arguments(
+                message, splitted, lambda x: x < 2,
+                pakreq.telegram_consts.TOO_FEW_ARGUMENTS
+        ):
+            return
         logger.info('Adding new request: %s' % splitted[1])
         description = 'Unavailable'
-        if len(splitted) < 2:
-            await message.reply(
-                pakreq.telegram_consts.TOO_FEW_ARGUMENTS,
-                parse_mode='HTML'
-            )
-            return
-        elif len(splitted) == 3:
+        if len(splitted) == 3:
             description = splitted[2]
         rtype = handle_request(splitted[0])
         if rtype == -1:
             logging.error('Unexpected request type: %s' % splitted[0])
             await message.reply(
                 pakreq.telegram_consts.error_msg(
-                    err='Unexpected request type',
-                    err_detail=splitted[0]
+                    'Unexpected request type',
+                    detail=splitted[0]
                 ),
                 parse_mode='HTML'
             )
