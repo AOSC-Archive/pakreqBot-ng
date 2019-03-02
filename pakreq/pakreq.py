@@ -12,6 +12,8 @@ from pakreq.db import OAuthInfo, RequestStatus, RequestType, REQUEST, USER
 from pakreq.db import get_max_id, get_row, get_rows, update_row, init_db
 from pakreq.packages import get_package_info, search_packages
 
+from sqlalchemy.sql import (select, or_)
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -92,6 +94,19 @@ async def get_requests(conn):
     return await get_rows(conn, REQUEST)
 
 
+async def search_requests(conn, keyword):
+    """Search through requests"""
+    keyword = '%{}%'.format(keyword)
+    query = select([REQUEST]).where(
+        or_(
+            REQUEST.c.name.like(keyword),
+            REQUEST.c.description.like(keyword)
+        )
+    ).order_by(REQUEST.c.id).limit(10)
+    results = await conn.execute(query, keyword=keyword)
+    return await results.fetchall()
+
+
 async def get_max_user_id(conn):
     """Fetch max user id (wrapper of get_max_id)"""
     return await get_max_id(conn, USER)
@@ -105,6 +120,16 @@ async def get_max_request_id(conn):
 async def get_user(conn, id):
     """Get user info by ID (wrapper of get_row)"""
     return await get_row(conn, USER, id)
+
+
+async def get_user_by_name(conn, name):
+    """Get user info by name (only the first match will be returned)"""
+    query = select([USER]).where(
+            or_(USER.c.id == name, USER.c.name == name)
+        ).limit(1)
+    query = await conn.execute(query)
+    user = await query.fetchone()
+    return user
 
 
 async def get_request(conn, id):
@@ -122,11 +147,11 @@ async def update_request(conn, id, **kwargs):
     await update_row(conn, REQUEST, id, kwargs)
 
 
-# Wrapped
 async def get_open_requests(conn):
     """Gets all the open requests"""
-    requests = await get_requests(conn)
-    return [ request for request in requests if request['status'] == RequestStatus.OPEN]
+    query = select([REQUEST]).where(REQUEST.c.status == RequestStatus.OPEN)
+    results = await conn.execute(query)
+    return await results.fetchall()
 
 
 # Daemon part
@@ -166,7 +191,7 @@ class Daemon(object):
                             )
                     else:
                         await update_request(
-                            conn, request['id'],status=RequestStatus.REJECTED,
+                            conn, request['id'], status=RequestStatus.REJECTED,
                             note='404 Package not found'
                         )
 

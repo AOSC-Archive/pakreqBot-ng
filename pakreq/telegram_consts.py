@@ -127,11 +127,10 @@ You are <b>{username}</b> and your user ID is <b>{id}</b>.
 """
 
 SEARCH_RESULT = """\
-<b>Name match</b>:
-{name_match}
-<b>Description match</b>:
-{description_match}
-ONLY 10 requests will be shown, \
+<b>Results</b>:
+{matches}
+
+ONLY first 10 requests are shown, \
 please visit {url} for the full list of requests.
 """
 

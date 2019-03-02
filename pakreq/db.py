@@ -14,6 +14,8 @@ from sqlalchemy import (
     Integer, String, Date, Boolean, Enum
 )
 
+from sqlalchemy.sql import (select, or_)
+
 
 class RequestType(enum.Enum):
     """Types of requests"""
@@ -32,6 +34,7 @@ class RequestStatus(enum.Enum):
 class OAuthInfo(object):
     """OAuth info"""
     # TODO: Make this more elegant
+
     def __init__(
         self, string=None, github_id=None,
         telegram_id=None, aosc_id=None
@@ -173,18 +176,16 @@ async def update_row(conn, table, id, kwargs):
 
 async def check_password(conn, name, password):
     """Check password and rotate cleartext password if needed"""
-    from pakreq.pakreq import get_users, update_user
+    from pakreq.pakreq import update_user, get_user_by_name
     from pakreq.utils import password_hash, password_verify
-    users = await get_users(conn)
+    user = await get_user_by_name(conn, name)
     status = False
-    for user in users:
-        if user['username'] == name or str(user['id']) == name:
-            hash = user['password_hash']
-            if password_verify(user['id'], password, hash):
-                status = True
-                hasher = PasswordHasher()
-                if hasher.check_needs_rehash(hash):
-                    hash = password_hash(user['id'], password)
-                    await update_user(conn, user['id'], password_hash=hash)
+    hash = user['password_hash']
+    if password_verify(user['id'], password, hash):
+        status = True
+        hasher = PasswordHasher()
+        if hasher.check_needs_rehash(hash):
+            hash = password_hash(user['id'], password)
+            await update_user(conn, user['id'], password_hash=hash)
 
     return status

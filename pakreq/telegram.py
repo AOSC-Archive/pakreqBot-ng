@@ -10,7 +10,6 @@ import logging
 from aiogram import Bot, types
 from aiogram.utils import executor
 from aiogram.dispatcher import Dispatcher
-from collections import deque
 
 import pakreq.db
 import pakreq.pakreq
@@ -134,21 +133,17 @@ class PakreqBot(object):
                 )
                 return
             async with self.app['db'].acquire() as conn:
-                requests = await pakreq.pakreq.get_requests(conn)
-            count = 0
-            for request in requests:
-                if count < 10:
-                    if request['status'] == pakreq.db.RequestStatus.OPEN:
-                        result = result + \
-                                 pakreq.telegram_consts.REQUEST_BRIEF_INFO.format(
-                                     id=request['id'], name=escape(request['name']),
-                                     rtype=get_type(request['type']),
-                                     description=escape(request['description'])
-                                 )
-                        count += 1
-                else:
-                    break
-            if count >= 10:
+                requests = await pakreq.pakreq.get_open_requests(conn)
+            for request in requests[:10]:
+                if request['status'] == pakreq.db.RequestStatus.OPEN:
+                    result = result + \
+                        pakreq.telegram_consts.REQUEST_BRIEF_INFO.format(
+                            id=request['id'], name=escape(
+                                request['name']),
+                            rtype=get_type(request['type']),
+                            description=escape(request['description'])
+                        )
+            if len(requests) >= 10:
                 result += pakreq.telegram_consts.FULL_LIST.format(
                     url=self.app['config']['base_url']
                 )
@@ -295,45 +290,21 @@ class PakreqBot(object):
         ):
             return
         async with self.app['db'].acquire() as conn:
-            requests = await pakreq.pakreq.get_requests(conn)
-        name_match = deque(
-            (request for request in requests
-             if splitted[1] in request['name']),
-            maxlen=10
-        )
-        desc_match = deque(
-            (request for request in requests
-             if splitted[1] in request['description']),
-            maxlen=10
-        )
-        result_name_match = ''
-        result_desc_match = ''
-        while name_match:
-            request = name_match.pop()
-            result_name_match += \
-                pakreq.telegram_consts.REQUEST_BRIEF_INFO.format(
-                    id=request['id'], name=escape(request['name']),
-                    rtype=get_type(request['type']),
-                    description=escape(request['description'])
+            requests = await pakreq.pakreq.search_requests(conn, splitted[1])
+        results = ''
+        for request in requests:
+            results += pakreq.telegram_consts.REQUEST_BRIEF_INFO.format(
+                id=request['id'], name=escape(request['name']),
+                rtype=get_type(request['type']),
+                description=escape(request['description']).replace(
+                    escape(splitted[1]), '<b>%s</b>' % escape(splitted[1])
                 )
-        while desc_match:
-            request = desc_match.pop()
-            result_desc_match += \
-                pakreq.telegram_consts.REQUEST_BRIEF_INFO.format(
-                    id=request['id'], name=escape(request['name']),
-                    rtype=get_type(request['type']),
-                    description=escape(request['description']).replace(
-                        escape(splitted[1]), '<b>%s</b>' % escape(splitted[1])
-                    )
-                )
-        result_name_match = result_name_match or \
-            pakreq.telegram_consts.NO_MATCH_FOUND.format(keyword=splitted[1])
-        result_desc_match = result_desc_match or \
+            )
+        results = results or \
             pakreq.telegram_consts.NO_MATCH_FOUND.format(keyword=splitted[1])
         await message.reply(
             pakreq.telegram_consts.SEARCH_RESULT.format(
-                name_match=result_name_match,
-                description_match=result_desc_match,
+                matches=results,
                 url=self.app['config']['base_url']
             ),
             parse_mode='HTML'
@@ -486,10 +457,9 @@ class PakreqBot(object):
         ids = None
         async with self.app['db'].acquire() as conn:
             if len(splitted) < 2:
-                requests = await pakreq.pakreq.get_requests(conn)
+                requests = await pakreq.pakreq.get_open_requests(conn)
                 for request in requests:
-                    if (request['status'] == pakreq.db.RequestStatus.OPEN) and \
-                            (request['packager_id'] == 0):
+                    if (request['packager_id'] == 0):
                         ids = [request['id']]
                         break
                 if ids is None:
@@ -657,7 +627,8 @@ class PakreqBot(object):
                     await message.reply(
                         pakreq.telegram_consts.IS_ALREADY_IN_THE_LIST
                         .format(
-                            rtype=escape(splitted[0].split('@')[0][1:].capitalize()),
+                            rtype=escape(splitted[0].split(
+                                '@')[0][1:].capitalize()),
                             name=escape(str(splitted[1]))
                         ),
                         parse_mode='HTML'
