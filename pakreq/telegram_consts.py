@@ -110,6 +110,14 @@ PROCESS_SUCCESS = """\
 Successfully processed request {id}.
 """
 
+UNLINK_SUCCESS = """\
+Your Telegram account is now no longer associated with any pakreq account.
+"""
+
+UNLINK_NOTHING_TO_UNLINK = """\
+You are current not associated with any pakreq account.
+"""
+
 ONLY_REQUESTER_CAN_EDIT = """\
 Only requester can edit the description for request {id}.
 """
@@ -146,6 +154,7 @@ Command list:
 /register [username] [password] - Register a new account.
 /passwd &lt;password&gt; - Set new password.
 /link [username] [password] - Link your Telegram ID to your pakreq account.
+/unlink - Unlink any pakreq account that is associated with your Telegram ID.
 /whoami - Get information of current account.
 /pakreq &lt;package name&gt; [description] - Add a new pakreq.
 /updreq &lt;package name&gt; [description] - Add a new updreq.

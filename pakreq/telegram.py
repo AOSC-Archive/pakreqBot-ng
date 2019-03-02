@@ -107,6 +107,35 @@ class PakreqBot(object):
                 parse_mode='HTML'
             )
 
+    async def unlink_account(self, message: types.Message):
+        """Implementation of /unlink"""
+        logger.info(
+            'Received request to unlink telegram account: %s' %
+            message.from_user.id
+        )
+        async with self.app['db'].acquire() as conn:
+            if not await \
+                pakreq.pakreq.get_user_from_oauth_id(conn,
+                                                     OAuthType.Telegram,
+                                                     message.from_user.id):
+                await message.reply(
+                                pakreq.telegram_consts.UNLINK_NOTHING_TO_UNLINK
+                                )
+                return
+            # Unlink this Telegram account from other pakreq accounts
+            try:
+                await pakreq.pakreq.delete_oauth(conn, OAuthType.Telegram,
+                                                 message.from_user.id)
+                await message.reply(pakreq.telegram_consts.UNLINK_SUCCESS)
+            except Exception:
+                await message.reply(
+                    pakreq.telegram_consts.error_msg(
+                        "Unable to update user info",
+                        "Failed to unlink accounts."
+                    ),
+                    parse_mode='HTML'
+                )
+
     async def list_requests(self, message: types.Message):
         """Implementation of /list, list requests"""
         logger.info('Received request to list requests: %s' % message.text)
@@ -336,7 +365,7 @@ class PakreqBot(object):
             users = await pakreq.pakreq.get_users(conn)
             for user in users:
                 if await pakreq.pakreq.get_oauth_from_oid(
-                            conn, OAuthType.Telegram, message.from_user.id):
+                        conn, OAuthType.Telegram, message.from_user.id):
                     await message.reply(
                         pakreq.telegram_consts.ALREADY_REGISTERED,
                         parse_mode='HTML'
@@ -661,7 +690,8 @@ class PakreqBot(object):
             (['claim', 'unclaim'], self.claim_request),
             (['start', 'help'], self.show_help),
             (['done', 'reject', 'reopen'], self.set_status),
-            (['pakreq', 'updreq', 'optreq'], self.new_request)
+            (['pakreq', 'updreq', 'optreq'], self.new_request),
+            (['unlink'], self.unlink_account)
         ]
         for command in commands_mapping:
             logging.info('Registering command: %s' % command[0])
