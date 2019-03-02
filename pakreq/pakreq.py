@@ -8,11 +8,13 @@ from datetime import datetime
 from packaging import version
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from pakreq.db import OAuthInfo, RequestStatus, RequestType, REQUEST, USER
+from pakreq.db import (
+    OAuthType, RequestStatus, RequestType, REQUEST, USER, OAUTH
+)
 from pakreq.db import get_max_id, get_row, get_rows, update_row, init_db
 from pakreq.packages import get_package_info, search_packages
 
-from sqlalchemy.sql import (select, or_)
+from sqlalchemy.sql import (select, or_, and_)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -68,17 +70,13 @@ async def get_request_detail(conn, id):
     return result
 
 
-async def new_user(
-    conn, username, id=None, admin=False,
-    password_hash=None, oauth_info=OAuthInfo()
-):
+async def new_user(conn, username, id=None, admin=False, password_hash=None):
     """Create new user"""
     # Initializing values
     id = id or (await get_max_id(conn, USER) + 1)
     statement = USER.insert(None).values(
         id=id, username=username, admin=admin,
         password_hash=password_hash,
-        oauth_info=oauth_info.output()
     )
     await conn.execute(statement)
     await conn.commit()
@@ -125,11 +123,61 @@ async def get_user(conn, id):
 async def get_user_by_name(conn, name):
     """Get user info by name (only the first match will be returned)"""
     query = select([USER]).where(
-            or_(USER.c.id == name, USER.c.name == name)
-        ).limit(1)
+        or_(USER.c.id == name, USER.c.username == name)
+    ).limit(1)
     query = await conn.execute(query)
     user = await query.fetchone()
     return user
+
+# OAuth related functions
+
+
+async def get_user_from_oauth_id(conn, type, oid):
+    """Get user info by OAuth type and ID"""
+    query = select([USER]).select_from(
+        USER.join(OAUTH, OAUTH.c.uid == USER.c.id)
+    ).where(
+            and_(OAUTH.c.type == type, OAUTH.c.oid == oid)
+        ).order_by(USER.c.id).limit(1)
+    results = await conn.execute(query)
+    return await results.fetchone()
+
+
+async def get_oauth_from_user_id(conn, uid, type):
+    """Get OAuth info by user id"""
+    query = select([OAUTH]).where(
+            and_(OAUTH.c.uid == uid, OAUTH.c.type == type)
+        ).limit(1)
+    results = await conn.execute(query)
+    results = await results.fetchone()
+    return results
+
+
+async def new_oauth_from_user_id(conn, uid, type, oid=None, token=None):
+    results = await get_oauth_from_user_id(conn, uid, type)
+    if results is None:
+        query = OAUTH.insert().values(
+            uid=uid, type=type, oid=oid, token=token
+        )
+        await conn.execute(query)
+        await conn.commit()
+    return
+
+
+async def delete_oauth(conn, type, oid):
+    action = OAUTH.delete().where(
+            and_(OAUTH.c.type == type, OAUTH.c.oid == oid)
+        )
+    await conn.execute(action)
+    await conn.commit()
+
+
+async def get_oauth_from_oid(conn, type, oid=None):
+    query = select([OAUTH]).where(
+            and_(OAUTH.c.type == type, OAUTH.c.oid == oid)
+        )
+    results = await conn.execute(query)
+    return await results.fetchall()
 
 
 async def get_request(conn, id):
@@ -172,10 +220,12 @@ class Daemon(object):
         async with self.app['db'].acquire() as conn:
             requests = await get_open_requests(conn)
             for request in requests:
-                logger.debug('Processing %s (ID: %s)...' % (request['name'], request['id']))
+                logger.debug('Processing %s (ID: %s)...' %
+                             (request['name'], request['id']))
                 if request['type'] == RequestType.PAKREQ:
                     if await find_package(request['name']):
-                        logger.info('%s has been packaged, closing' % request['name'])
+                        logger.info('%s has been packaged, closing' %
+                                    request['name'])
                         await update_request(
                             conn, request['id'], status=RequestStatus.DONE,
                             note='(BOT) This package has been packaged.'
@@ -184,10 +234,12 @@ class Daemon(object):
                     if await find_package(request['name']):
                         info = await get_package_info(request['name'])
                         if version.parse(info['pkg']['version']) >= version.parse(request['description']):
-                            logger.info('%s has been upgraded, closing...' % request['name'])
+                            logger.info(
+                                '%s has been upgraded, closing...' % request['name'])
                             await update_request(
                                 conn, request['id'], status=RequestStatus.DONE,
-                                note='(BOT) This package has been updated to: %s' % info['pkg']['version']
+                                note='(BOT) This package has been updated to: %s' % info[
+                                    'pkg']['version']
                             )
                     else:
                         await update_request(
@@ -197,7 +249,8 @@ class Daemon(object):
 
     def start(self):
         scheduler = AsyncIOScheduler()
-        scheduler.add_job(self.clean, 'interval', seconds=1800, next_run_time=datetime.now())
+        scheduler.add_job(self.clean, 'interval', seconds=1800,
+                          next_run_time=datetime.now())
         scheduler.start()
 
 

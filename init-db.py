@@ -5,7 +5,7 @@
 
 from sqlalchemy import create_engine, MetaData
 
-from pakreq.db import USER, REQUEST
+from pakreq.db import USER, REQUEST, OAUTH
 from pakreq.settings import BASE_DIR, get_config
 
 DB_LINK = "sqlite:///{location}"
@@ -21,13 +21,13 @@ db_engine = create_engine(DB_URL)
 def create_tables(engine=db_engine):
     """Create the tables"""
     meta = MetaData()
-    meta.create_all(bind=engine, tables=[USER, REQUEST])
+    meta.create_all(bind=engine, tables=[USER, REQUEST, OAUTH])
 
 
 def drop_tables(engine=db_engine):
     """Delete the tables"""
     meta = MetaData()
-    meta.drop_all(bind=engine, tables=[USER, REQUEST])
+    meta.drop_all(bind=engine, tables=[USER, REQUEST, OAUTH])
 
 
 if __name__ == '__main__':

@@ -5,7 +5,6 @@ Database management utils
 """
 
 import enum
-import json
 import aiosqlite3.sa
 from argon2 import PasswordHasher
 
@@ -13,8 +12,6 @@ from sqlalchemy import (
     MetaData, Table, Column, ForeignKey,
     Integer, String, Date, Boolean, Enum
 )
-
-from sqlalchemy.sql import (select, or_)
 
 
 class RequestType(enum.Enum):
@@ -31,38 +28,11 @@ class RequestStatus(enum.Enum):
     REJECTED = 2
 
 
-class OAuthInfo(object):
-    """OAuth info"""
-    # TODO: Make this more elegant
-
-    def __init__(
-        self, string=None, github_id=None,
-        telegram_id=None, aosc_id=None
-    ):
-        self.info = dict()
-        if string is None:
-            self.info['github_id'] = github_id
-            self.info['telegram_id'] = telegram_id
-            self.info['aosc_id'] = aosc_id
-        else:
-            loaded = json.loads(string)
-            self.info['github_id'] = loaded['github_id'] or None
-            self.info['telegram_id'] = loaded['telegram_id'] or None
-            self.info['aosc_id'] = loaded['aosc_id'] or None
-
-    def edit(self, **kwargs):
-        """Edit OAuthInfo"""
-        for key in self.info.keys():
-            if key in kwargs:
-                self.info[key] = kwargs.get(key)
-        return self
-
-    def output(self):
-        """Output OAuthInfo in JSON format"""
-        output = self.info
-        if output is not None:
-            output = json.dumps(output)
-        return output
+class OAuthType(enum.Enum):
+    """OAuth Type"""
+    Telegram = 0
+    GitHub = 1
+    AOSC = 2
 
 
 META = MetaData()
@@ -76,7 +46,6 @@ USER = Table(
     Column('username', String, nullable=False, unique=True),
     Column('admin', Boolean, nullable=False),  # 0 -> non-admin, 1 -> admin
     Column('password_hash', String, nullable=True),
-    Column('oauth_info', String, nullable=True),
     sqlite_autoincrement=True
 )
 
@@ -95,6 +64,16 @@ REQUEST = Table(
     Column('pub_date', Date, nullable=False),
     Column('note', String, nullable=True),
     sqlite_autoincrement=True
+)
+
+# OAuth
+OAUTH = Table(
+    'oauth', META,
+
+    Column('uid', Integer, ForeignKey('user.id'), primary_key=True),
+    Column('type', Enum(OAuthType), nullable=False, primary_key=True),
+    Column('oid', String),
+    Column('token', String)
 )
 
 
