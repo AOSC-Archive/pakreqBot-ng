@@ -67,11 +67,11 @@ class PakreqBot(object):
         async with self.app['db'].acquire() as conn:
             user = await pakreq.pakreq.get_user_by_name(conn, splitted[1])
             if not user:
-                reply_invalid_cred()
+                await reply_invalid_cred()
                 return
             if not password_verify(
                     user['id'], splitted[2], user['password_hash']):
-                reply_invalid_cred()
+                await reply_invalid_cred()
                 return
 
             # Unlink this Telegram account from other pakreq accounts
