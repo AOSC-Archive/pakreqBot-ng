@@ -185,6 +185,13 @@ async def get_request(conn, id):
     return await get_row(conn, REQUEST, id)
 
 
+async def get_requests_by_user(conn, id):
+    """Fetch all the requests that are requested by user"""
+    query = select([REQUEST]).where(REQUEST.c.requester_id == id)
+    results = await conn.execute(query)
+    return await results.fetchall()
+
+
 async def update_user(conn, id, **kwargs):
     """Update user by ID (wrapper of update_row)"""
     await update_row(conn, USER, id, kwargs)
