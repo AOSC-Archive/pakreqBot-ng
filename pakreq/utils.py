@@ -11,6 +11,7 @@ from argon2 import PasswordHasher
 from datetime import date, datetime
 
 from pakreq.db import RequestType, RequestStatus
+from aiosqlite3.sa.result import RowProxy
 
 # Configuration checker
 TRAFARET = T.Dict({
@@ -38,6 +39,8 @@ def json_serial(obj):
         return get_type(obj)
     elif isinstance(obj, RequestStatus):
         return get_status(obj)
+    elif isinstance(obj, RowProxy):
+        return dict(zip(obj.keys(), obj.values()))
     raise TypeError('Type %s not serializable' % type(obj))
 
 

@@ -60,11 +60,13 @@ async def get_request_detail(conn, id):
     result = await get_row(conn, REQUEST, id)
     # Get requester & packager information
     try:
-        result['requester'] = await get_row(conn, USER, result['requester_id'])
+        query = await get_row(conn, USER, result['requester_id'])
+        result['requester'] = dict(id=query['id'], username=query['username'], admin=query['admin'])
     except Exception:
         result['requester'] = dict(id='0', username='Unknown')
     try:
-        result['packager'] = await get_row(conn, USER, result['packager_id'])
+        await get_row(conn, USER, result['packager_id'])
+        result['packager'] = dict(id=query['id'], username=query['username'], admin=query['admin'])
     except Exception:
         result['packager'] = dict(id='0', username='Unknown')
     return result

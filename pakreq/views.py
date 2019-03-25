@@ -85,7 +85,9 @@ async def requests_all(request):
     """List requests"""
     async with request.app['db'].acquire() as conn:
         result = await pakreq.pakreq.get_open_requests(conn)
-    return web.json_response(result, dumps=dump_json)
+        result_dict = list(result)
+        print(type(result[0]))
+    return web.json_response(result_dict, dumps=dump_json)
 
 
 async def request_detail(request):
