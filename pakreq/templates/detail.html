@@ -1,11 +1,22 @@
 {% extends "base.html" %}
-{% set title = request.name + ' - AOSC OS Package Requests' %}
-{% block banner %}
-    <h1>{{ request.name }}</h1>
-    <p>Description: {{ request.description }}</p>
-{% endblock %}
+
+{% set title = "Request Details" %}
 
 {% block content %}
+    <!-- Toolbar -->
+    <table>
+        <tbody>
+        <tr>
+            <td>
+                <a href="{{ base_url }}/">Back to listing</a>
+            </td>
+            <td>
+                <a href="{{ base_url }}/account">My Account</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
     <!-- Details -->
     <table>
         <tbody>

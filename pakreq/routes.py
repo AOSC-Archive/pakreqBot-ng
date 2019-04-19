@@ -15,14 +15,12 @@ from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from pakreq.views import (
     index, requests_all, request_detail, detail, login, auth, account, logout)
 from pakreq.webauth import PakreqAuth
-from pakreq.middlewares import setup_middlewares
 
 PROJECT_ROOT = pathlib.Path(__file__).parent
 
 
 def setup_routes(app):
     """Setup routes and session handlers"""
-    setup_middlewares(app)
     # we could use `secret` module here but that requires Python 3.6+
     key = base64.urlsafe_b64decode(Fernet.generate_key())
     setup_session(app, EncryptedCookieStorage(key))

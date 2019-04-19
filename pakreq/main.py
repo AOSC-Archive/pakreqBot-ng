@@ -33,20 +33,20 @@ def main(argv):
     telegram_process.start()
 
     # Maintenance daemon
-    # daemon_process = Process(
-    #     target=start_daemon, args=(config,)
-    # )
-    # daemon_process.start()
+    daemon_process = Process(
+        target=start_daemon, args=(config,)
+    )
+    daemon_process.start()
 
     try:
         web_process.join()
         telegram_process.join()
-        # daemon_process.join()
+        daemon_process.join()
     finally:
         print('\rBye-Bye!')
         os.kill(web_process.pid, signal.SIGINT)
         os.kill(telegram_process.pid, signal.SIGINT)
-        # os.kill(daemon_process.pid, signal.SIGINT)
+        os.kill(daemon_process.pid, signal.SIGINT)
         exit(0)
 
 
