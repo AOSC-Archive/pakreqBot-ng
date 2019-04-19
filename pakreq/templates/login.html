@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 
-{% set title = "Login" %}
+{% set title = "Login - AOSC OS Package Requests" %}
+{% block banner %}
+    <h1>Login</h1>
+{% endblock %}
 
 {% block content %}
     <p>
@@ -8,11 +11,24 @@
     </p>
     <br/>
     <form action="{{ base_url }}/login" method="post">
-        Login:
-        <input type="text" name="user" autofocus/>
-        Password:
-        <input type="password" name="pwd"/>
-        <input type="submit" value="submit"/>
+        <table>
+            <tbody>
+            <tr>
+                <b>Login:</b>
+            </tr>
+            <tr>
+                <td>Username</td>
+                <td><input type="text" name="user" autofocus/></td>
+            </tr>
+            <tr>
+                <td>Password</td>
+                <td><input type="password" name="pwd"/></td>
+            </tr>
+            <tr>
+                <td><input type="submit" value="Submit"/></td>
+            </tr>
+            </tbody>
+        </table>
     </form>
     <p>If you need to authenticate through other authentication services, please use <i>modern</i> WebUI.</p>
 {% endblock %}
