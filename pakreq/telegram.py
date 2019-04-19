@@ -622,7 +622,7 @@ class PakreqBot(object):
         ):
             return
         logger.info('Adding new request: %s' % splitted[1])
-        description = 'Unavailable'
+        description = 'N/A'
         if len(splitted) == 3:
             description = splitted[2]
         rtype = handle_request(splitted[0])

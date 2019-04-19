@@ -98,4 +98,4 @@ def escape(text):
     try:
         return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
     except AttributeError:
-        return 'Unavailable'
+        return 'N/A'
