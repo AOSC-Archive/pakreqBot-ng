@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 
-{% set title = "Account Settings" %}
+{% set title = "Account Settings - AOSC OS Package Requests" %}
+
+{% block banner %}
+    <h1>Account Settings</h1>
+    <p>Settings for {{ username }}</p>
+{% endblock %}
 
 {% block content %}
-    <a href="{{ base_url }}/logout">Log Out</a>
-    <p>Username: {{ username }}</p>
-    <h3>User Settings</h3>
+    <h2>User Settings</h2>
     <form method="post">
         <table>
             <tbody>
@@ -32,4 +35,5 @@
             </tbody>
         </table>
     </form>
+    <a href="{{ base_url }}/logout">Log Out</a>
 {% endblock %}

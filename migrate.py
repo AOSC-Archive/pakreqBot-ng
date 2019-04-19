@@ -9,7 +9,8 @@ from datetime import datetime
 
 import pakreq.pakreq
 from pakreq import db, settings
-from pakreq.utils import get_type, find_user
+from pakreq.utils import get_type
+from pakreq.pakreq import get_user_from_oauth_id, new_oauth_from_user_id
 
 OLD_DB = 'old.db'
 
@@ -18,10 +19,9 @@ async def migrate_user(conn, telegram_id, username=None):
     username = username or telegram_id
     print('>>> Adding user %s(%s)' % (username, telegram_id))
     users = await pakreq.pakreq.get_users(conn)
-    if not find_user(users, telegram_id):
+    if not get_user_from_oauth_id(users, telegram_id):
         await pakreq.pakreq.new_user(
-            conn, username,
-            oauth_info=db.OAuthInfo(telegram_id=telegram_id)
+            conn, username
         )
 
 
