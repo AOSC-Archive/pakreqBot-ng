@@ -11,24 +11,26 @@
     </p>
     <br/>
     <form action="{{ base_url }}/login" method="post">
-        <table>
-            <tbody>
-            <tr>
-                <b>Login:</b>
-            </tr>
-            <tr>
-                <td>Username</td>
-                <td><input type="text" name="user" autofocus/></td>
-            </tr>
-            <tr>
-                <td>Password</td>
-                <td><input type="password" name="pwd"/></td>
-            </tr>
-            <tr>
-                <td><input type="submit" value="Submit"/></td>
-            </tr>
-            </tbody>
-        </table>
+        <div style="overflow: auto">
+            <table>
+                <tbody>
+                <tr>
+                    <b>Login:</b>
+                </tr>
+                <tr>
+                    <td>Username</td>
+                    <td><input type="text" name="user" autofocus/></td>
+                </tr>
+                <tr>
+                    <td>Password</td>
+                    <td><input type="password" name="pwd"/></td>
+                </tr>
+                <tr>
+                    <td><input type="submit" value="Submit"/></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </form>
-    <p>If you need to authenticate through other authentication services, please use <i>modern</i> WebUI.</p>
+    <!-- <p>If you need to authenticate through other authentication services, please use <i>modern</i> WebUI.</p> -->
 {% endblock %}

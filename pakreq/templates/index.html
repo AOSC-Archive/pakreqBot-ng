@@ -10,30 +10,32 @@
 
 {% block content %}
     {% if requests %}
-        <table class="requests">
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Date</th>
-                <th>Description</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for request in requests %}
+        <div style="overflow: auto">
+            <table class="requests">
+                <thead>
                 <tr>
-                    <td class="req-id">{{ request.id }}</td>
-                    <td class="req-name"><a href="{{ base_url }}/detail/{{ request.id }}">{{ request.name }}</a></td>
-                    <td class="req-type">
-                        {{ pakreqType(request.type) }}
-                    </td>
-                    <td class="req-date">{{ request.pub_date }}</td>
-                    <td class="req-desc">{{ request.description }}</td>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Description</th>
                 </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                {% for request in requests %}
+                    <tr>
+                        <td class="req-id">{{ request.id }}</td>
+                        <td class="req-name"><a href="{{ base_url }}/detail/{{ request.id }}">{{ request.name }}</a></td>
+                        <td class="req-type">
+                            {{ pakreqType(request.type) }}
+                        </td>
+                        <td class="req-date">{{ request.pub_date }}</td>
+                        <td class="req-desc">{{ request.description }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     {% else %}
         <p>No requests</p>
     {% endif %}
