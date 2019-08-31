@@ -322,8 +322,7 @@ class PakreqBot(object):
             pakreq.telegram_consts.NO_MATCH_FOUND.format(keyword=splitted[1])
         await message.reply(
             pakreq.telegram_consts.SEARCH_RESULT.format(
-                matches=results,
-                url=self.app['config']['base_url']
+                matches=results
             ),
             parse_mode='HTML'
         )
