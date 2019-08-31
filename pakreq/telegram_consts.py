@@ -137,9 +137,6 @@ You are <b>{username}</b> and your user ID is <b>{id}</b>.
 SEARCH_RESULT = """\
 <b>Results</b>:
 {matches}
-
-ONLY first 10 requests are shown, \
-please visit {url} for the full list of requests.
 """
 
 NO_MATCH_FOUND = """\
