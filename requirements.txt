@@ -3,7 +3,7 @@ uvloop
 aiogram
 aiohttp
 packaging
-aiosqlite3
+aiopg
 aiohttp_session[secure]
 sqlalchemy
 apscheduler

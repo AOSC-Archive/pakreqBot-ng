@@ -1,5 +1,8 @@
 db:
-  location: "database.db"
+  host: "localhost"
+  username: "app"
+  password: "password"
+  database: "pakreq"
 
 telegram:
   token: ""

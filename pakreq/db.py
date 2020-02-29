@@ -5,12 +5,12 @@ Database management utils
 """
 
 import enum
-import aiosqlite3.sa
+import aiopg.sa
 from argon2 import PasswordHasher
 
 from sqlalchemy import (
     MetaData, Table, Column, ForeignKey,
-    Integer, String, Date, Boolean, Enum
+    Integer, String, Date, Boolean, Enum, select, func
 )
 
 
@@ -84,8 +84,11 @@ class RecordNotFoundException(Exception):
 async def init_db(app):
     """Initialize database connection"""
     conf = app['config']['db']
-    engine = await aiosqlite3.sa.create_engine(
-        conf['location']
+    engine = await aiopg.sa.create_engine(
+        user=conf['username'],
+        database=conf['database'],
+        host=conf['host'],
+        password=conf['password']
     )
     app['db'] = engine
 
@@ -117,15 +120,9 @@ async def get_row(conn, table, id):
     return dict(zip(result.keys(), result.values()))
 
 
-async def get_max_id(conn, table):
+async def get_max_id(conn, table: Table):
     """Get max id of a table"""
-    # TODO: Make this more elegant
-    if table is REQUEST:
-        max_id = await conn.execute("SELECT MAX(id) FROM request")
-    elif table is USER:
-        max_id = await conn.execute("SELECT MAX(id) FROM user")
-    else:
-        raise ValueError
+    max_id = await conn.execute(select([func.max(table.c.id)]))
     max_id = await max_id.fetchone()
     if max_id:
         return max_id[0] or 0
@@ -150,7 +147,6 @@ async def update_row(conn, table, id, kwargs):
                 new_values
             )
         )
-        await conn.commit()
 
 
 async def check_password(conn, name, password):

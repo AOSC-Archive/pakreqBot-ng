@@ -17,7 +17,10 @@ from aiosqlite3.sa.result import RowProxy
 TRAFARET = T.Dict({
     T.Key('db'):
         T.Dict({
-            'location': T.String(),
+            'host': T.String(),
+            'username': T.String(),
+            'password': T.String(allow_blank=True),
+            'database': T.String(),
         }),
     T.Key('telegram'):
         T.Dict({

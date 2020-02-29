@@ -385,7 +385,7 @@ class PakreqBot(object):
                 pw = password_hash(user_id, pw)
             try:
                 await pakreq.pakreq.new_user(
-                    conn, id=user_id, username=username,
+                    conn, username=username,
                     password_hash=pw
                 )
                 await pakreq.pakreq.new_oauth_from_user_id(
@@ -638,13 +638,13 @@ class PakreqBot(object):
         async with self.app['db'].acquire() as conn:
             user = await pakreq.pakreq.get_user_from_oauth_id(
                 conn, OAuthType.Telegram, message.from_user.id)
-            user_id = user['id']
-            if user_id is None:
+            if user is None:
                 await message.reply(
                     pakreq.telegram_consts.REGISTER_FIRST,
                     parse_mode='HTML'
                 )
                 return
+            user_id = user['id']
             requests = await pakreq.pakreq.get_open_requests(conn)
             for request in requests:
                 if (request['name'] == splitted[1]) and\

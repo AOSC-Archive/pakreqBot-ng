@@ -52,7 +52,6 @@ async def new_request(
         note=note
     )
     await conn.execute(statement)
-    await conn.commit()
 
 
 async def get_request_detail(conn, id):
@@ -81,7 +80,6 @@ async def new_user(conn, username, id=None, admin=False, password_hash=None):
         password_hash=password_hash,
     )
     await conn.execute(statement)
-    await conn.commit()
 
 
 async def get_users(conn):
@@ -125,7 +123,7 @@ async def get_user(conn, id):
 async def get_user_by_name(conn, name):
     """Get user info by name (only the first match will be returned)"""
     query = select([USER]).where(
-        or_(USER.c.id == name, USER.c.username == name)
+        USER.c.username == name
     ).limit(1)
     query = await conn.execute(query)
     user = await query.fetchone()
@@ -139,7 +137,7 @@ async def get_user_from_oauth_id(conn, type, oid):
     query = select([USER]).select_from(
         USER.join(OAUTH, OAUTH.c.uid == USER.c.id)
     ).where(
-            and_(OAUTH.c.type == type, OAUTH.c.oid == oid)
+            and_(OAUTH.c.type == type, OAUTH.c.oid == str(oid))
         ).order_by(USER.c.id).limit(1)
     results = await conn.execute(query)
     return await results.fetchone()
@@ -159,24 +157,22 @@ async def new_oauth_from_user_id(conn, uid, type, oid=None, token=None):
     results = await get_oauth_from_user_id(conn, uid, type)
     if results is None:
         query = OAUTH.insert().values(
-            uid=uid, type=type, oid=oid, token=token
+            uid=uid, type=type, oid=str(oid), token=token
         )
         await conn.execute(query)
-        await conn.commit()
     return
 
 
 async def delete_oauth(conn, type, oid):
     action = OAUTH.delete().where(
-            and_(OAUTH.c.type == type, OAUTH.c.oid == oid)
+            and_(OAUTH.c.type == type, OAUTH.c.oid == str(oid))
         )
     await conn.execute(action)
-    await conn.commit()
 
 
 async def get_oauth_from_oid(conn, type, oid=None):
     query = select([OAUTH]).where(
-            and_(OAUTH.c.type == type, OAUTH.c.oid == oid)
+            and_(OAUTH.c.type == type, OAUTH.c.oid == str(oid))
         )
     results = await conn.execute(query)
     return await results.fetchall()
