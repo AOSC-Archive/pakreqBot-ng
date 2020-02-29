@@ -86,7 +86,6 @@ async def requests_all(request):
     async with request.app['db'].acquire() as conn:
         result = await pakreq.pakreq.get_open_requests(conn)
         result_dict = list(result)
-        print(type(result[0]))
     return web.json_response(result_dict, dumps=dump_json)
 
 

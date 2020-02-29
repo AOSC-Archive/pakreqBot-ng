@@ -343,7 +343,7 @@ class PakreqBot(object):
             )
         else:
             await message.reply(
-                pakreq.telegram_consts.REGISTER_FIRST.format,
+                pakreq.telegram_consts.REGISTER_FIRST,
                 parse_mode='HTML'
             )
 

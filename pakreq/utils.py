@@ -11,7 +11,7 @@ from argon2 import PasswordHasher
 from datetime import date, datetime
 
 from pakreq.db import RequestType, RequestStatus
-from aiosqlite3.sa.result import RowProxy
+from aiopg.sa.result import RowProxy
 
 # Configuration checker
 TRAFARET = T.Dict({
