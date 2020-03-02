@@ -152,13 +152,13 @@ async def update_row(conn, table, id, kwargs):
 async def check_password(conn, name, password):
     """Check password and rotate cleartext password if needed"""
     from pakreq.pakreq import update_user, get_user_by_name
-    from pakreq.utils import password_hash, password_verify
+    from pakreq.utils import password_hash, password_verify, get_password_hasher
     user = await get_user_by_name(conn, name)
     status = False
     hash = user['password_hash']
     if password_verify(user['id'], password, hash):
         status = True
-        hasher = PasswordHasher()
+        hasher = get_password_hasher()
         if hasher.check_needs_rehash(hash):
             hash = password_hash(user['id'], password)
             await update_user(conn, user['id'], password_hash=hash)

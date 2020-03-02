@@ -26,5 +26,8 @@ pakreq.egg-info
 .pytest_cache
 */.pytest_cache
 
+# mypy
+.mypy_cache
+
 # IntelliJ IDEA
 .idea

@@ -76,10 +76,15 @@ def get_status(status):
         return 'UnknownJellyStatusException'
 
 
+def get_password_hasher():
+    # time cost: 2^3, memory_cost: 2^16
+    return PasswordHasher(time_cost=8, memory_cost=65536)
+
+
 def password_hash(id, password):
     """Calculate password hash (Argon2), use this function if you want to
     generate password hashes (register new users)"""
-    hasher = PasswordHasher()
+    hasher = get_password_hasher()
     orig = '%s:%s' % (id, password)
     return hasher.hash(orig)
 
@@ -87,7 +92,7 @@ def password_hash(id, password):
 def password_verify(id, password, hash):
     """Verify password hash (Argon2), use this function if you want to
        authorize logins"""
-    hasher = PasswordHasher()
+    hasher = PasswordHasher()  # a default hasher here is fine since the params are stored with the hash
     cleartext = '%s:%s' % (id, password)
     try:
         hasher.verify(hash, cleartext)
