@@ -33,25 +33,6 @@ TRAFARET = T.Dict({
 })
 
 
-def json_serial(obj):
-    # From Stack Overflow: https://stackoverflow.com/a/22238613
-    """JSON serializer for objects not serializable by default json code"""
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    elif isinstance(obj, RequestType):
-        return get_type(obj)
-    elif isinstance(obj, RequestStatus):
-        return get_status(obj)
-    elif isinstance(obj, RowProxy):
-        return dict(zip(obj.keys(), obj.values()))
-    raise TypeError('Type %s not serializable' % type(obj))
-
-
-def dump_json(obj):
-    """Wrapper for dumping JSON"""
-    return dumps(obj, default=json_serial)
-
-
 def get_type(type):
     """Get request type"""
     if type == RequestType.PAKREQ:

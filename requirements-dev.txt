@@ -6,5 +6,4 @@
 
 # For testing
 pytest
-pytest-aiohttp
 flake8
