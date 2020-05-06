@@ -39,7 +39,7 @@ async def find_package(name):
 async def new_request(
     conn, id=None, status=RequestStatus.OPEN, rtype=RequestType.PAKREQ,
     name='Unknown', description='Unknown',
-    requester_id=0, packager_id=0,
+    requester_id=None, packager_id=None,
     date=datetime.now(), note=None
 ):
     """Create new request"""
