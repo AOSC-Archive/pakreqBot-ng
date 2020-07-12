@@ -442,6 +442,7 @@ class PakreqBot(object):
                         ),
                         parse_mode='HTML'
                     )
+                    return
                 await pakreq.pakreq.update_request(
                     conn, int(splitted[1]), description=desc
                 )
