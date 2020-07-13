@@ -40,7 +40,7 @@ async def new_request(
     conn, id=None, status=RequestStatus.OPEN, rtype=RequestType.PAKREQ,
     name='Unknown', description='Unknown',
     requester_id=None, packager_id=None,
-    date=datetime.now(), note=None
+    date=None, note=None
 ):
     """Create new request"""
     # Initializing values
@@ -48,7 +48,7 @@ async def new_request(
     statement = REQUEST.insert(None).values(
         id=id, status=status, type=rtype, name=name,
         description=description, requester_id=requester_id,
-        packager_id=packager_id, pub_date=date,
+        packager_id=packager_id, pub_date=(date or datetime.now()),
         note=note
     )
     await conn.execute(statement)
